@@ -168,6 +168,10 @@ int main( int argc_, char *argv_[] )
 	disp.cursor_color( FL_GREEN );
 	disp.linenumber_width( 50 );
 	disp.textfont( FL_COURIER );
+	int ts;
+	cfg.get( "ts", ts, 14 );
+	disp.textsize( ts );
+	disp.linenumber_size( ts );
 	disp.buffer( textbuff ); // attach text buffer to display widget
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
@@ -188,5 +192,6 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "y", win->y() );
 	cfg.set( "w", win->w() );
 	cfg.set( "h", win->h() );
+	cfg.set( "ts", disp.textsize() );
 	cfg.flush();
 }
