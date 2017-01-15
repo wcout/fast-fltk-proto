@@ -1,6 +1,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Preferences.H>
 #include <FL/Fl.H>
 
 #include <string>
@@ -22,7 +23,7 @@ void focus_cb( void *v_ )
 {
 	if ( win )
 	{
-		printf( "take focus\n" );
+//		printf( "take focus\n" );
 		win->show();
 		win->take_focus();
 	}
@@ -30,7 +31,7 @@ void focus_cb( void *v_ )
 
 int parse_first_error( int &line_, string& err_, string errfile_ )
 {
-	printf( "parse_first_error\n" );
+//	printf( "parse_first_error\n" );
 	line_ = 0;
 	err_.erase();
 	stringstream ifs;
@@ -38,14 +39,14 @@ int parse_first_error( int &line_, string& err_, string errfile_ )
 	string buf;
 	while ( getline( ifs, buf ) )
 	{
-		printf( "parsing: '%s'\n", buf.c_str() );
+//		printf( "parsing: '%s'\n", buf.c_str() );
 		size_t errpos;
 		if ( ( errpos = buf.find( temp_cxx ) ) == 0 )
 		{
 			errpos += temp_cxx.size() + 1;
-			printf( "errpos %u\n", errpos );
+//			printf( "errpos %u\n", errpos );
 			line_ = atoi( buf.substr( errpos ).c_str() );
-			printf( "error line: %d\n", line_ );
+//			printf( "error line: %d\n", line_ );
 			err_ = buf;
 			if ( line_ )
 				break;
@@ -71,8 +72,8 @@ void compile_and_run( string code_ )
 			result += buf;
 		pclose( f );
 	}
-	printf( "Compile '%s' FILE = %p\n", cmd.c_str(), f );
-	printf( "result: '%s'\n", result.c_str());
+//	printf( "Compile '%s' FILE = %p\n", cmd.c_str(), f );
+//	printf( "result: '%s'\n", result.c_str());
 	if ( result.size() )
 	{
 		int line;
@@ -80,7 +81,7 @@ void compile_and_run( string code_ )
 		parse_first_error( line, err, result );
 		if ( line )
 		{
-			printf( "(line %d): %s\n", line, err.c_str());
+//			printf( "(line %d): %s\n", line, err.c_str());
 			int start = textbuff->skip_lines( 0, line - 1 );
 			int end = textbuff->skip_lines( start, 1 );
 			textbuff->highlight( start, end );
@@ -107,7 +108,7 @@ void compile_and_run( string code_ )
 	}
 	else if ( child_pid == 0 )
 	{
-		printf("execute '%s'\n", temp.c_str());
+//		printf("execute '%s'\n", temp.c_str());
 		execlp( temp.c_str(), temp.c_str(), NULL );
 		_exit( EXIT_FAILURE );
 	}
@@ -132,7 +133,14 @@ void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ 
 
 int main()
 {
-	win = new Fl_Double_Window( 800, 600, "Fast FLTK prototyping" );
+	Fl_Preferences cfg( ".", NULL, "fltk_fast_proto" );
+	int x, y, w, h;
+	cfg.get( "x", x, 100 );
+	cfg.get( "y", y, 100 );
+	cfg.get( "w", w, 800 );
+	cfg.get( "h", h, 600 );
+
+	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
 	Fl_Text_Editor disp( 10, 10, win->w() - 20, win->h() - 50 );
 	errorbox = new Fl_Box( 10, 10 + disp.h(), win->w() - 20, 30 );
@@ -151,7 +159,16 @@ int main()
 	win->end();
 	win->resizable( win );
 	win->show();
+	win->position( x, y );
+
 	Fl::run();
+
 	if ( child_pid > 0 )
 		kill( child_pid, SIGTERM );
+
+	cfg.set( "x", win->x() );
+	cfg.set( "y", win->y() );
+	cfg.set( "w", win->w() );
+	cfg.set( "h", win->h() );
+	cfg.flush();
 }
