@@ -19,6 +19,7 @@ Fl_Box *errorbox = 0;
 string temp( "./temp_xxxx" );
 string temp_cxx( temp + ".cxx" );
 string errfile( "error.txt" );
+string compile_cmd( "fltk-config --use-images --compile" );
 
 void focus_cb( void *v_ )
 {
@@ -63,7 +64,7 @@ void compile_and_run( string code_ )
 	outf << code_;
 	outf.close();
 	remove( temp.c_str() );
-	string cmd( "fltk-config --use-images --compile " + temp_cxx + " 2>&1" );
+	string cmd( compile_cmd + " " + temp_cxx + " 2>&1" );
 	FILE *f = popen( cmd.c_str(), "r" );
 	string result;
 	if ( f )
@@ -140,7 +141,9 @@ int main( int argc_, char *argv_[] )
 	cfg.get( "y", y, 100 );
 	cfg.get( "w", w, 800 );
 	cfg.get( "h", h, 600 );
-
+	char *text;
+	cfg.get( "compile_cmd", text, "fltk-config --use-images --compile" );
+	compile_cmd = text;
 	if ( argc_ > 1 )
 	{
 		string f = argv_[ 1 ];
@@ -193,5 +196,6 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "w", win->w() );
 	cfg.set( "h", win->h() );
 	cfg.set( "ts", disp.textsize() );
+	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.flush();
 }
