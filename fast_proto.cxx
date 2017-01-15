@@ -3,6 +3,7 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Preferences.H>
 #include <FL/Fl.H>
+#include <FL/filename.H>
 
 #include <string>
 #include <fstream>
@@ -131,7 +132,7 @@ void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ 
 	}
 }
 
-int main()
+int main( int argc_, char *argv_[] )
 {
 	Fl_Preferences cfg( ".", NULL, "fltk_fast_proto" );
 	int x, y, w, h;
@@ -139,6 +140,23 @@ int main()
 	cfg.get( "y", y, 100 );
 	cfg.get( "w", w, 800 );
 	cfg.get( "h", h, 600 );
+
+	if ( argc_ > 1 )
+	{
+		string f = argv_[ 1 ];
+		printf( "File '%s'\n", f.c_str() );
+		if ( access( f.c_str(), R_OK ) == 0 )
+		{
+			size_t ext_pos = f.find( ".cxx" );
+			if ( ext_pos == string::npos )
+				ext_pos = f.find( ".cpp" );
+			if ( ext_pos != string::npos )
+			{
+				temp_cxx = f;
+				temp = "./" + (string)fl_filename_name( f.substr( 0, ext_pos ).c_str() );
+			}
+		}
+	}
 
 	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
