@@ -1,3 +1,11 @@
+/*
+   FLTK Fast Prototyping demo.
+
+   - Linux
+   - fltk-config available
+   - Compiler error output compatible with gcc
+
+*/
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Box.H>
@@ -168,6 +176,7 @@ int main( int argc_, char *argv_[] )
 	errorbox->box( FL_FLAT_BOX );
 	disp.color( fl_lighter( FL_BLUE ) );
 	disp.textcolor( FL_WHITE );
+	disp.cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
 	disp.cursor_color( FL_GREEN );
 	disp.linenumber_width( 50 );
 	disp.textfont( FL_COURIER );
