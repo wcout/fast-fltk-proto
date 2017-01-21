@@ -17,7 +17,9 @@
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
+#ifndef WIN32
 #include <sys/wait.h>
+#endif
 using namespace std;
 
 pid_t child_pid = -1;
@@ -99,6 +101,24 @@ string run_cmd( const string& cmd_ )
 
 pid_t execute( const char *exe_ )
 {
+#ifdef WIN32
+	pid_t child_pid = -1;
+	PROCESS_INFORMATION pi = { 0 };
+	STARTUPINFO si = { 0 };
+	DWORD dwCreationFlags = CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
+	si.cb = sizeof( STARTUPINFO );
+	si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW | STARTF_FORCEOFFFEEDBACK;
+	si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
+	si.hStdOutput = GetStdHandle( STD_OUTPUT_HANDLE );
+	si.hStdError = GetStdHandle( STD_ERROR_HANDLE );
+	si.wShowWindow = SW_HIDE;
+	if ( CreateProcess( NULL, (LPSTR)exe_, NULL, NULL, FALSE,
+		                            dwCreationFlags, NULL, NULL, &si, &pi ) )
+	{
+		CloseHandle( pi.hThread );
+		child_pid = (pid_t)pi.hProcess;
+	}
+#else
 	pid_t child_pid = fork();
 	if ( child_pid > 0 )
 	{
@@ -114,7 +134,17 @@ pid_t execute( const char *exe_ )
 		execlp( exe_, exe_, NULL );
 		_exit( EXIT_FAILURE );
 	}
+#endif
 	return child_pid;
+}
+
+void terminate( pid_t pid_ )
+{
+#ifdef WIN32
+	TerminateProcess( (HANDLE)pid_, 0 );
+#else
+	kill( pid_, SIGTERM );
+#endif
 }
 
 void compile_and_run( string code_ )
@@ -164,7 +194,7 @@ void compile_and_run( string code_ )
 	}
 
 	if ( child_pid > 0 )
-		kill( child_pid, SIGTERM );
+		terminate( child_pid );
 
 	child_pid = execute( temp.c_str() );
 }
@@ -279,7 +309,8 @@ int main( int argc_, char *argv_[] )
 	Fl::run();
 
 	if ( child_pid > 0 )
-		kill( child_pid, SIGTERM );
+		terminate( child_pid );
+
 
 	cfg.set( "x", win->x() );
 	cfg.set( "y", win->y() );
