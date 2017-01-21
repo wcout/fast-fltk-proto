@@ -29,7 +29,8 @@ string temp( "./temp_xxxx" );
 string temp_cxx( temp + ".cxx" );
 string errfile( "error.txt" );
 string compile_cmd( "fltk-config --use-images --compile" );
-string shasum;
+string changed_cmd( "shasum" );
+string changed;
 bool regain_focus = true;
 
 void focus_cb( void *v_ )
@@ -132,14 +133,14 @@ void compile_and_run( string code_ )
 	// run only if exe changed
 	if ( access( temp.c_str(), R_OK ) == 0 )
 	{
-		string cmd = "shasum " + temp;
+		string cmd = changed_cmd + " " + temp;
 		string result = run_cmd( cmd );
-		if ( shasum == result )
+		if ( changed == result )
 		{
 //			printf( "no change\n" );
 			return;
 		}
-		shasum = result;
+		changed = result;
 	}
 
 	if ( child_pid > 0 )
@@ -190,6 +191,8 @@ int main( int argc_, char *argv_[] )
 	char *text;
 	cfg.get( "compile_cmd", text, "fltk-config --use-images --compile" );
 	compile_cmd = text;
+	cfg.get( "changed_cmd", text, "shasum" );
+	changed_cmd = text;
 	if ( argc_ > 1 )
 	{
 		string f = argv_[ 1 ];
@@ -247,5 +250,6 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "h", win->h() );
 	cfg.set( "ts", editor->textsize() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
+	cfg.set( "changed_cmd", changed_cmd.c_str() );
 	cfg.flush();
 }
