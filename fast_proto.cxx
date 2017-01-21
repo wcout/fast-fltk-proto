@@ -126,7 +126,7 @@ void compile_and_run( string code_ )
 		else
 		{
 			textbuff->unhighlight();
-			errorbox->copy_label( "" );
+			errorbox->copy_label( "No errors" );
 			errorbox->color( FL_GRAY );
 		}
 	}
@@ -232,8 +232,8 @@ int main( int argc_, char *argv_[] )
 
 	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
-	editor = new Fl_Text_Editor( 10, 10, win->w() - 20, win->h() - 50 );
-	errorbox = new Fl_Box( 10, 10 + editor->h(), win->w() - 20, 30 );
+	editor = new Fl_Text_Editor( 0, 0, win->w(), win->h() - 30 );
+	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
 	errorbox->box( FL_FLAT_BOX );
 	editor->color( fl_lighter( FL_BLUE ) );
 	editor->textcolor( FL_WHITE );
