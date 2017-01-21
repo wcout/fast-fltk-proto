@@ -28,14 +28,20 @@ string temp( "./temp_xxxx" );
 string temp_cxx( temp + ".cxx" );
 string errfile( "error.txt" );
 string compile_cmd( "fltk-config --use-images --compile" );
+string shasum;
 
 void focus_cb( void *v_ )
 {
 	if ( win )
 	{
+		static int state = 0;
 //		printf( "take focus\n" );
+		state++;
 		win->show();
 		win->take_focus();
+		Fl_Text_Editor *e = (Fl_Text_Editor *)win->child( 0 );
+		e->show_cursor( state % 2 );
+		Fl::add_timeout( 0.2, focus_cb );
 	}
 }
 
@@ -106,6 +112,26 @@ void compile_and_run( string code_ )
 			errorbox->color( FL_GRAY );
 		}
 	}
+	// run only if exe changed
+	{
+	string cmd( "shasum " + temp );
+	FILE *f = popen( cmd.c_str(), "r" );
+	string result;
+	if ( f )
+	{
+		char buf[512];
+		while ( fgets( buf, sizeof( buf ), f ) != NULL )
+			result += buf;
+		pclose( f );
+	}
+	if ( shasum == result )
+	{
+//		printf( "no change\n" );
+		return;
+	}
+	shasum = result;
+	}
+
 	if ( child_pid > 0 )
 		kill( child_pid, SIGTERM );
 
@@ -114,6 +140,7 @@ void compile_and_run( string code_ )
 	{
 		int status;
 		waitpid( child_pid, &status, WNOHANG );
+		Fl::remove_timeout( focus_cb );
 		Fl::add_timeout( 0.2, focus_cb );
 	}
 	else if ( child_pid == 0 )
@@ -171,6 +198,7 @@ int main( int argc_, char *argv_[] )
 
 	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
+	// texteditor must be first child of window
 	Fl_Text_Editor disp( 10, 10, win->w() - 20, win->h() - 50 );
 	errorbox = new Fl_Box( 10, 10 + disp.h(), win->w() - 20, 30 );
 	errorbox->box( FL_FLAT_BOX );
