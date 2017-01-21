@@ -97,6 +97,26 @@ string run_cmd( const string& cmd_ )
 	return result;
 }
 
+pid_t execute( const char *exe_ )
+{
+	pid_t child_pid = fork();
+	if ( child_pid > 0 )
+	{
+		int status;
+		waitpid( child_pid, &status, WNOHANG );
+		Fl::remove_timeout( focus_cb );
+		Fl::add_timeout( 0.2, focus_cb );
+		regain_focus = true;
+	}
+	else if ( child_pid == 0 )
+	{
+//		printf( "execute '%s'\n", exe_ );
+		execlp( exe_, exe_, NULL );
+		_exit( EXIT_FAILURE );
+	}
+	return child_pid;
+}
+
 void compile_and_run( string code_ )
 {
 //	printf( "compile and run: '%s'\n", code_.c_str() );
@@ -146,21 +166,7 @@ void compile_and_run( string code_ )
 	if ( child_pid > 0 )
 		kill( child_pid, SIGTERM );
 
-	child_pid = fork();
-	if ( child_pid > 0 )
-	{
-		int status;
-		waitpid( child_pid, &status, WNOHANG );
-		Fl::remove_timeout( focus_cb );
-		Fl::add_timeout( 0.2, focus_cb );
-		regain_focus = true;
-	}
-	else if ( child_pid == 0 )
-	{
-//		printf("execute '%s'\n", temp.c_str());
-		execlp( temp.c_str(), temp.c_str(), NULL );
-		_exit( EXIT_FAILURE );
-	}
+	child_pid = execute( temp.c_str() );
 }
 
 void cb_compile( void *v_ )
