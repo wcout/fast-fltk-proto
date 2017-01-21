@@ -189,6 +189,17 @@ static int kf_delete_line( int c_, Fl_Text_Editor *e_ )
 	e_->redraw();
 }
 
+static int kf_duplicate_line( int c_, Fl_Text_Editor *e_ )
+{
+	int pos = e_->insert_position();
+	char *line = e_->buffer()->line_text( pos );
+	int end = e_->buffer()->line_end( pos );
+	e_->buffer()->insert( end + 1, "\n");
+	e_->buffer()->insert( end + 1, line );
+	free( line );
+	e_->redraw();
+}
+
 int main( int argc_, char *argv_[] )
 {
 	Fl_Preferences cfg( ".", NULL, "fltk_fast_proto" );
@@ -236,6 +247,7 @@ int main( int argc_, char *argv_[] )
 	editor->linenumber_size( ts );
 	editor->buffer( textbuff ); // attach text buffer to editorlay widget
 	editor->add_key_binding( 'y', FL_CTRL, kf_delete_line );
+	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
