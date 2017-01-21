@@ -23,6 +23,7 @@ using namespace std;
 pid_t child_pid = -1;
 Fl_Window *win = 0;
 Fl_Text_Buffer *textbuff = 0;
+Fl_Text_Editor *editor = 0;
 Fl_Box *errorbox = 0;
 string temp( "./temp_xxxx" );
 string temp_cxx( temp + ".cxx" );
@@ -39,8 +40,9 @@ void focus_cb( void *v_ )
 		state++;
 		win->show();
 		win->take_focus();
-		Fl_Text_Editor *e = (Fl_Text_Editor *)win->child( 0 );
-		e->show_cursor( state % 2 );
+		// cursor blinking
+		if ( editor )
+			editor->show_cursor( state % 2 );
 		Fl::add_timeout( 0.2, focus_cb );
 	}
 }
@@ -71,15 +73,9 @@ int parse_first_error( int &line_, string& err_, string errfile_ )
 	return line_;
 }
 
-void compile_and_run( string code_ )
+string run_cmd( const string& cmd_ )
 {
-//	printf( "compile and run: '%s'\n", code_.c_str() );
-	ofstream outf( temp_cxx.c_str() );
-	outf << code_;
-	outf.close();
-	remove( temp.c_str() );
-	string cmd( compile_cmd + " " + temp_cxx + " 2>&1" );
-	FILE *f = popen( cmd.c_str(), "r" );
+	FILE *f = popen( cmd_.c_str(), "r" );
 	string result;
 	if ( f )
 	{
@@ -88,6 +84,18 @@ void compile_and_run( string code_ )
 			result += buf;
 		pclose( f );
 	}
+	return result;
+}
+
+void compile_and_run( string code_ )
+{
+//	printf( "compile and run: '%s'\n", code_.c_str() );
+	ofstream outf( temp_cxx.c_str() );
+	outf << code_;
+	outf.close();
+	remove( temp.c_str() );
+	string cmd( compile_cmd + " " + temp_cxx + " 2>&1" );
+	string result = run_cmd( cmd );
 //	printf( "Compile '%s' FILE = %p\n", cmd.c_str(), f );
 //	printf( "result: '%s'\n", result.c_str());
 	if ( result.size() )
@@ -113,23 +121,16 @@ void compile_and_run( string code_ )
 		}
 	}
 	// run only if exe changed
+	if ( access( temp.c_str(), R_OK ) == 0 )
 	{
-	string cmd( "shasum " + temp );
-	FILE *f = popen( cmd.c_str(), "r" );
-	string result;
-	if ( f )
-	{
-		char buf[512];
-		while ( fgets( buf, sizeof( buf ), f ) != NULL )
-			result += buf;
-		pclose( f );
-	}
-	if ( shasum == result )
-	{
-//		printf( "no change\n" );
-		return;
-	}
-	shasum = result;
+		string cmd = "shasum " + temp;
+		string result = run_cmd( cmd );
+		if ( shasum == result )
+		{
+//			printf( "no change\n" );
+			return;
+		}
+		shasum = result;
 	}
 
 	if ( child_pid > 0 )
@@ -198,26 +199,25 @@ int main( int argc_, char *argv_[] )
 
 	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
-	// texteditor must be first child of window
-	Fl_Text_Editor disp( 10, 10, win->w() - 20, win->h() - 50 );
-	errorbox = new Fl_Box( 10, 10 + disp.h(), win->w() - 20, 30 );
+	editor = new Fl_Text_Editor( 10, 10, win->w() - 20, win->h() - 50 );
+	errorbox = new Fl_Box( 10, 10 + editor->h(), win->w() - 20, 30 );
 	errorbox->box( FL_FLAT_BOX );
-	disp.color( fl_lighter( FL_BLUE ) );
-	disp.textcolor( FL_WHITE );
-	disp.cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
-	disp.cursor_color( FL_GREEN );
-	disp.linenumber_width( 50 );
-	disp.textfont( FL_COURIER );
+	editor->color( fl_lighter( FL_BLUE ) );
+	editor->textcolor( FL_WHITE );
+	editor->cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
+	editor->cursor_color( FL_GREEN );
+	editor->linenumber_width( 50 );
+	editor->textfont( FL_COURIER );
 	int ts;
 	cfg.get( "ts", ts, 14 );
-	disp.textsize( ts );
-	disp.linenumber_size( ts );
-	disp.buffer( textbuff ); // attach text buffer to display widget
+	editor->textsize( ts );
+	editor->linenumber_size( ts );
+	editor->buffer( textbuff ); // attach text buffer to editorlay widget
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )
 		textbuff->text( "// type FLTK program here..\n" );
-	disp.insert_position( textbuff->length() );
+	editor->insert_position( textbuff->length() );
 	win->end();
 	win->resizable( win );
 	win->show();
@@ -232,7 +232,7 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "y", win->y() );
 	cfg.set( "w", win->w() );
 	cfg.set( "h", win->h() );
-	cfg.set( "ts", disp.textsize() );
+	cfg.set( "ts", editor->textsize() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.flush();
 }
