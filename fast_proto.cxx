@@ -255,6 +255,9 @@ int main( int argc_, char *argv_[] )
 	win->show();
 	win->position( x, y );
 
+	string title( temp_cxx + " - " + win->label() );
+	win->copy_label( title.c_str() );
+
 	Fl::run();
 
 	if ( child_pid > 0 )
