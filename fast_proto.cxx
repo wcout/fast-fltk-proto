@@ -30,6 +30,7 @@ string temp_cxx( temp + ".cxx" );
 string errfile( "error.txt" );
 string compile_cmd( "fltk-config --use-images --compile" );
 string shasum;
+bool regain_focus = true;
 
 void focus_cb( void *v_ )
 {
@@ -38,8 +39,16 @@ void focus_cb( void *v_ )
 		static int state = 0;
 //		printf( "take focus\n" );
 		state++;
-		win->show();
-		win->take_focus();
+		if ( win && regain_focus && Fl::focus() == editor )
+		{
+			regain_focus = false;
+//			printf( "focus regained.\n ");
+		}
+		if ( regain_focus )
+		{
+			win->show();
+			win->take_focus();
+		}
 		// cursor blinking
 		if ( editor )
 			editor->show_cursor( state % 2 );
@@ -143,6 +152,7 @@ void compile_and_run( string code_ )
 		waitpid( child_pid, &status, WNOHANG );
 		Fl::remove_timeout( focus_cb );
 		Fl::add_timeout( 0.2, focus_cb );
+		regain_focus = true;
 	}
 	else if ( child_pid == 0 )
 	{
@@ -216,7 +226,10 @@ int main( int argc_, char *argv_[] )
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )
+	{
 		textbuff->text( "// type FLTK program here..\n" );
+		textbuff->select( 0, textbuff->length() );
+	}
 	editor->insert_position( textbuff->length() );
 	win->end();
 	win->resizable( win );
