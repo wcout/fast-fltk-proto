@@ -180,6 +180,15 @@ void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ 
 	}
 }
 
+static int kf_delete_line( int c_, Fl_Text_Editor *e_ )
+{
+	int pos = e_->insert_position();
+	int beg = e_->buffer()->line_start( pos );
+	int end = e_->buffer()->line_end( pos );
+	e_->buffer()->remove( beg, end + 1);
+	e_->redraw();
+}
+
 int main( int argc_, char *argv_[] )
 {
 	Fl_Preferences cfg( ".", NULL, "fltk_fast_proto" );
@@ -226,12 +235,19 @@ int main( int argc_, char *argv_[] )
 	editor->textsize( ts );
 	editor->linenumber_size( ts );
 	editor->buffer( textbuff ); // attach text buffer to editorlay widget
+	editor->add_key_binding( 'y', FL_CTRL, kf_delete_line );
+
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )
 	{
 		textbuff->text( "// type FLTK program here..\n" );
 		textbuff->select( 0, textbuff->length() );
+	}
+	else
+	{
+		string backup_file( temp_cxx + ".orig" );
+		textbuff->outputfile( backup_file.c_str(), 0, textbuff->length() );
 	}
 	editor->insert_position( textbuff->length() );
 	win->end();
