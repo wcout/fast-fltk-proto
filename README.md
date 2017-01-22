@@ -1,4 +1,5 @@
 # FLTK Fast Prototyping Demo
+`v0.1: 2017/01/22`
 
 A simple *proof of concept* of an idea how to "rapid prototype"
 a single source `FLTK` application using `FLTK` itself as an IDE.
