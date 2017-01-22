@@ -283,7 +283,9 @@ int main( int argc_, char *argv_[] )
 	editor->linenumber_size( ts );
 	editor->buffer( textbuff ); // attach text buffer to editorlay widget
 	editor->add_key_binding( 'y', FL_CTRL, kf_delete_line );
+	editor->add_key_binding( 'd', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
+	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
 
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
