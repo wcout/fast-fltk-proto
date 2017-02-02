@@ -9,6 +9,10 @@ which is **live compiled and executed** during typing. In case of
 compiler errors, the first error is displayed in a box below
 the edit field and the source line highlighted.
 
+Also a style check command is executed (default: cppcheck), after
+compilation succeeded and the first style error is displayed in
+the box below.
+
 **Tested on Linux only.**
 
 Made compilable for Windows (using mingw) too, but not tested

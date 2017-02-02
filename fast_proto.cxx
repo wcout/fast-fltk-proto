@@ -48,6 +48,7 @@ string errfile( "error.txt" );
 string compile_cmd( "fltk-config --use-images --compile" );
 string changed_cmd( "shasum" );
 string changed;
+string style_check_cmd( "cppcheck --enable=all");
 bool regain_focus = true;
 
 void focus_cb( void *v_ )
@@ -82,13 +83,14 @@ int parse_first_error( int &line_, string& err_, string errfile_ )
 	stringstream ifs;
 	ifs << errfile_;
 	string buf;
+	string search( fl_filename_name( temp_cxx.c_str() ) );
 	while ( getline( ifs, buf ) )
 	{
 		// parse for line with error
 		size_t errpos;
-		if ( ( errpos = buf.find( temp_cxx ) ) == 0 )
+		if ( ( errpos = buf.find( search ) ) <= 2 )
 		{
-			errpos += temp_cxx.size() + 1;
+			errpos += search.size() + 1;
 			// found potential error line - line number is afterwards
 			line_ = atoi( buf.substr( errpos ).c_str() );
 			err_ = buf;
@@ -167,7 +169,7 @@ void terminate( pid_t pid_ )
 #endif
 }
 
-void compile_and_run( string code_ )
+int compile_and_run( string code_ )
 {
 	//  write code to temp file
 	ofstream outf( temp_cxx.c_str() );
@@ -197,7 +199,7 @@ void compile_and_run( string code_ )
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( FL_RED );
-			return;
+			return 0;
 		}
 		else
 		{
@@ -214,7 +216,7 @@ void compile_and_run( string code_ )
 		if ( changed == result )
 		{
 //			printf( "no change\n" );
-			return;
+			return 1;
 		}
 		changed = result;
 	}
@@ -223,6 +225,33 @@ void compile_and_run( string code_ )
 		terminate( child_pid );
 
 	child_pid = execute( temp.c_str() );
+	return 2;
+}
+
+void style_check( const string& name_ )
+{
+	if ( style_check_cmd.empty() )
+		return;
+	string cmd( style_check_cmd + " " + name_ + " 2>&1" );
+	string result = run_cmd( cmd );
+//	printf( "style check: [%s]\n", result.c_str() );
+	if ( result.size() )
+	{
+		// there may have been style errors..
+		int line;
+		string err;
+		parse_first_error( line, err, result );
+		if ( line )
+		{
+			// display error line in error panel
+//			printf( "error in line %d: %s\n", line, err.c_str() );
+			int start = textbuff->skip_lines( 0, line - 1 );
+			int end = textbuff->skip_lines( start, 1 );
+			textbuff->highlight( start, end );
+			errorbox->copy_label( err.c_str() );
+			errorbox->color( FL_YELLOW );
+		}
+	}
 }
 
 void cb_compile( void *v_ )
@@ -230,8 +259,13 @@ void cb_compile( void *v_ )
 	// compile the source an re-run the target
 	Fl_Text_Buffer *buf = (Fl_Text_Buffer *)v_;
 	char *t = buf->text();
-	compile_and_run( t );
+	int ret = compile_and_run( t );
 	free( t );
+	if ( ret > 0 )
+	{
+		// compiled without errors (file is saved in temp_cxx)
+		style_check( temp_cxx );
+	}
 }
 
 void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ )
@@ -280,6 +314,8 @@ int main( int argc_, char *argv_[] )
 	compile_cmd = text;
 	cfg.get( "changed_cmd", text, "shasum" );
 	changed_cmd = text;
+	cfg.get( "style_check_cmd", text, "cppcheck --enable=all" );
+	style_check_cmd = text;
 
 	// check if a source file is given
 	if ( argc_ > 1 )
@@ -366,5 +402,6 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "ts", editor->textsize() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.set( "changed_cmd", changed_cmd.c_str() );
+	cfg.set( "style_check_cmd", style_check_cmd.c_str() );
 	cfg.flush();
 }
