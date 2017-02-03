@@ -45,7 +45,15 @@ Fl_Box *errorbox = 0;
 string temp( "./temp_xxxx" );
 string temp_cxx( temp + ".cxx" );
 string errfile( "error.txt" );
+#if 1
+// use simple compile method (without warnings)
 string compile_cmd( "fltk-config --use-images --compile" );
+#else
+// use a command like this to specify compiler flags (like -Wall to get warning)
+// $(TARGET) will be replaced with the executable name
+// $(SRC) will be replaced with the source name
+string compile_cmd( "g++ -Wall -o $(TARGET) `fltk-config --use-images --cxxflags` $(SRC) `fltk-config --use-images --ldflags`" );
+#endif
 string changed_cmd( "shasum" );
 string changed;
 string style_check_cmd( "cppcheck --enable=all");
@@ -169,6 +177,37 @@ void terminate( pid_t pid_ )
 #endif
 }
 
+string compileCmd( const string& cmd_, const string& src_ )
+{
+	static const string TARGET = "$(TARGET)";
+	static const string SRC = "$(SRC)";
+	string cmd( cmd_ );
+	size_t target_pos = cmd.find( TARGET );
+	if ( target_pos != string::npos )
+	{
+		string target( src_ );
+		size_t pos = target.rfind( '.' );
+		if ( pos != string::npos )
+			target.erase( pos );
+		cmd.erase( target_pos, TARGET.size() );
+		cmd.insert( target_pos, target );
+	}
+	size_t src_pos = cmd.find( SRC );
+	if ( src_pos != string::npos )
+	{
+		cmd.erase( src_pos, SRC.size() );
+		cmd.insert( src_pos, src_ );
+	}
+	else
+	{
+		cmd.push_back( ' ');
+		cmd.append( src_ );
+	}
+	cmd += " 2>&1";
+//	printf( "compile_cmd: '%s'\n", cmd.c_str() );
+	return cmd;
+}
+
 int compile_and_run( string code_ )
 {
 	//  write code to temp file
@@ -178,10 +217,14 @@ int compile_and_run( string code_ )
 
 	// remove exe file
 	remove( temp.c_str() );
-	string cmd( compile_cmd + " " + temp_cxx + " 2>&1" );
+	string cmd( compileCmd( compile_cmd, temp_cxx ) );
 
 	// compile..
 	string result = run_cmd( cmd );
+
+	// exe created?
+	bool exe = access( temp.c_str(), R_OK ) == 0;
+	bool warnings( false );
 
 //	printf( "Compile '%s' => '%s'\n", cmd.c_str(), result.c_str() );
 	if ( result.size() )
@@ -192,31 +235,37 @@ int compile_and_run( string code_ )
 		parse_first_error( line, err, result );
 		if ( line )
 		{
-			// display error line in error panel
+			warnings = exe;	// if exe was created this can only be a warning!
+			// display error/warning line in error panel
 //			printf( "error in line %d: %s\n", line, err.c_str() );
 			int start = textbuff->skip_lines( 0, line - 1 );
 			int end = textbuff->skip_lines( start, 1 );
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
-			errorbox->color( FL_RED );
-			return 0;
+			errorbox->color( exe ? FL_GREEN : FL_RED ); // warning green / error red
+			if ( !exe )
+				return 0;
 		}
 		else
 		{
-			textbuff->unhighlight();
-			errorbox->copy_label( "No errors" );
-			errorbox->color( FL_GRAY );
+			result.erase();
 		}
 	}
+	if ( result.empty() )
+	{
+		textbuff->unhighlight();
+		errorbox->copy_label( "No errors" );
+		errorbox->color( FL_GRAY );
+	}
 	// re-run only if exe changed
-	if ( access( temp.c_str(), R_OK ) == 0 )
+	if ( exe )
 	{
 		string cmd = changed_cmd + " " + temp;
 		string result = run_cmd( cmd );
 		if ( changed == result )
 		{
 //			printf( "no change\n" );
-			return 1;
+			return warnings ? 0 : 1;
 		}
 		changed = result;
 	}
@@ -225,7 +274,7 @@ int compile_and_run( string code_ )
 		terminate( child_pid );
 
 	child_pid = execute( temp.c_str() );
-	return 2;
+	return warnings ? 0 : 2;
 }
 
 void style_check( const string& name_ )
