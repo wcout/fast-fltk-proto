@@ -84,9 +84,10 @@ void focus_cb( void *v_ )
 	}
 }
 
-int parse_first_error( int &line_, string& err_, string errfile_ )
+int parse_first_error( int &line_, int &col_, string& err_, string errfile_ )
 {
 	line_ = 0;
+	col_ = -1;
 	err_.erase();
 	stringstream ifs;
 	ifs << errfile_;
@@ -103,7 +104,13 @@ int parse_first_error( int &line_, string& err_, string errfile_ )
 			line_ = atoi( buf.substr( errpos ).c_str() );
 			err_ = buf;
 			if ( line_ ) // if error line found, we are finished
+			{
+				// try to read a column position
+				size_t col_pos = buf.find( ':', errpos );
+				if ( col_pos != string::npos && col_pos - errpos < 6 )
+					col_ = atoi( buf.substr( col_pos + 1 ).c_str() );
 				break;
+			}
 		}
 	}
 	return line_;
@@ -231,8 +238,9 @@ int compile_and_run( string code_ )
 	{
 		// there may have been compile errors..
 		int line;
+		int col;
 		string err;
-		parse_first_error( line, err, result );
+		parse_first_error( line, col, err, result );
 		if ( line )
 		{
 			warnings = exe;	// if exe was created this can only be a warning!
@@ -240,6 +248,8 @@ int compile_and_run( string code_ )
 //			printf( "error in line %d: %s\n", line, err.c_str() );
 			int start = textbuff->skip_lines( 0, line - 1 );
 			int end = textbuff->skip_lines( start, 1 );
+			if ( col > 0 )
+				start += ( col - 1 );
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( exe ? FL_GREEN : FL_RED ); // warning green / error red
@@ -288,14 +298,17 @@ void style_check( const string& name_ )
 	{
 		// there may have been style errors..
 		int line;
+		int col;
 		string err;
-		parse_first_error( line, err, result );
+		parse_first_error( line, col, err, result );
 		if ( line )
 		{
 			// display error line in error panel
 //			printf( "error in line %d: %s\n", line, err.c_str() );
 			int start = textbuff->skip_lines( 0, line - 1 );
 			int end = textbuff->skip_lines( start, 1 );
+			if ( col > 0 )
+				start += ( col - 1 );
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( FL_YELLOW );
