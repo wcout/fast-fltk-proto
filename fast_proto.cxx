@@ -37,6 +37,8 @@
 #endif
 using namespace std;
 
+#define CXX_SYNTAX	// use cxx syntax highlighter
+
 pid_t child_pid = -1;
 Fl_Window *win = 0;
 Fl_Text_Buffer *textbuff = 0;
@@ -61,6 +63,10 @@ bool ShowWarnings = true;
 bool CheckStyle = true;
 
 bool regain_focus = true;
+
+#ifdef CXX_SYNTAX
+#include "cxx_style.cxx"
+#endif
 
 void focus_cb( void *v_ )
 {
@@ -416,13 +422,20 @@ int main( int argc_, char *argv_[] )
 	// create the editor window using last size
 	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
+#ifdef CXX_SYNTAX
+	style_init();
+#endif
 	editor = new Fl_Text_Editor( 0, 0, win->w(), win->h() - 30 );
 	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
 	errorbox->box( FL_FLAT_BOX );
-	editor->color( fl_lighter( FL_BLUE ) );
-	editor->textcolor( FL_WHITE );
+	int bgcolor;
+	cfg.get( "bgcolor", bgcolor, (int)FL_WHITE );
+	editor->color( Fl_Color( bgcolor ) );
+	editor->textcolor( fl_contrast( FL_WHITE, editor->color() ) );
 	editor->cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
-	editor->cursor_color( FL_GREEN );
+	int cursor_color;
+	cfg.get( "cursor_color", cursor_color, (int)FL_GREEN );
+	editor->cursor_color( (Fl_Color)cursor_color );
 	editor->linenumber_width( 50 ); // show line numbers
 	editor->textfont( FL_COURIER );
 	int ts;
@@ -430,13 +443,19 @@ int main( int argc_, char *argv_[] )
 	editor->textsize( ts );
 	editor->linenumber_size( ts );
 	editor->buffer( textbuff ); // attach text buffer to editor
-
+#ifdef CXX_SYNTAX
+	editor->highlight_data( stylebuf, styletable,
+	                        sizeof(styletable) / sizeof(styletable[0]),
+	                        'A', style_unfinished_cb, 0);
+#endif
 	// add some key shortcuts (line deletion/duplication)
 	editor->add_key_binding( 'y', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'd', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
-
+#ifdef CXX_SYNTAX
+	textbuff->add_modify_callback( style_update, editor );
+#endif
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )
@@ -471,12 +490,14 @@ int main( int argc_, char *argv_[] )
 	if ( child_pid > 0 )
 		terminate( child_pid );
 
-	// save prefences
+	// save preferences
 	cfg.set( "x", win->x() );
 	cfg.set( "y", win->y() );
 	cfg.set( "w", win->w() );
 	cfg.set( "h", win->h() );
 	cfg.set( "ts", editor->textsize() );
+	cfg.set( "bgcolor", (int)editor->color() );
+	cfg.set( "cursor_color", (int)editor->cursor_color() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.set( "changed_cmd", changed_cmd.c_str() );
 	cfg.set( "style_check_cmd", style_check_cmd.c_str() );
