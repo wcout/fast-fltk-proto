@@ -422,8 +422,10 @@ int main( int argc_, char *argv_[] )
 	// create the editor window using last size
 	win = new Fl_Double_Window( w, h, "Fast FLTK prototyping" );
 	textbuff = new Fl_Text_Buffer();
+	int ts;
+	cfg.get( "ts", ts, 14 );
 #ifdef CXX_SYNTAX
-	style_init();
+	style_init( ts );
 #endif
 	editor = new Fl_Text_Editor( 0, 0, win->w(), win->h() - 30 );
 	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
@@ -438,8 +440,6 @@ int main( int argc_, char *argv_[] )
 	editor->cursor_color( (Fl_Color)cursor_color );
 	editor->linenumber_width( 50 ); // show line numbers
 	editor->textfont( FL_COURIER );
-	int ts;
-	cfg.get( "ts", ts, 14 );
 	editor->textsize( ts );
 	editor->linenumber_size( ts );
 	editor->buffer( textbuff ); // attach text buffer to editor

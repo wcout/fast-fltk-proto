@@ -241,7 +241,9 @@ style_parse(const char *text,
 //
 
 void
-style_init(void) {
+style_init(int ts = TS) {
+  for (int i = 0; i < sizeof(styletable) / sizeof(styletable[0]); i++)
+    styletable[i].size = ts;
   char *style = new char[textbuff->length() + 1];
   char *text = textbuff->text();
 
