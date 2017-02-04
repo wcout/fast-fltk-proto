@@ -57,6 +57,9 @@ string compile_cmd( "g++ -Wall -o $(TARGET) `fltk-config --use-images --cxxflags
 string changed_cmd( "shasum" );
 string changed;
 string style_check_cmd( "cppcheck --enable=all");
+bool ShowWarnings = true;
+bool CheckStyle = true;
+
 bool regain_focus = true;
 
 void focus_cb( void *v_ )
@@ -244,6 +247,8 @@ int compile_and_run( string code_ )
 		if ( line )
 		{
 			warnings = exe;	// if exe was created this can only be a warning!
+			if ( warnings && !ShowWarnings )
+				return 0;
 			// display error/warning line in error panel
 //			printf( "error in line %d: %s\n", line, err.c_str() );
 			int start = textbuff->skip_lines( 0, line - 1 );
@@ -323,7 +328,7 @@ void cb_compile( void *v_ )
 	char *t = buf->text();
 	int ret = compile_and_run( t );
 	free( t );
-	if ( ret > 0 )
+	if ( ret > 0 && CheckStyle )
 	{
 		// compiled without errors (file is saved in temp_cxx)
 		style_check( temp_cxx );
@@ -379,21 +384,31 @@ int main( int argc_, char *argv_[] )
 	cfg.get( "style_check_cmd", text, "cppcheck --enable=all" );
 	style_check_cmd = text;
 
-	// check if a source file is given
-	if ( argc_ > 1 )
+	// check if a source file or options are given
+	string source;
+	for ( int i = 1; i < argc_; i++ )
 	{
-		string f = argv_[ 1 ];
-		printf( "File '%s'\n", f.c_str() );
-		if ( access( f.c_str(), R_OK ) == 0 )
+		string arg( argv_[ i ] );
+		if ( arg == "-w" )
+			ShowWarnings = false;
+		else if ( arg == "-s" )
+			CheckStyle = false;
+		else if ( arg[0] != '-' )
+			source = arg.substr( 1 );
+	}
+	if ( source.size() )
+	{
+		if ( access( source.c_str(), R_OK ) == 0 )
 		{
-			size_t ext_pos = f.find( ".cxx" );
+			size_t ext_pos = source.find( ".cxx" );
 			if ( ext_pos == string::npos )
-				ext_pos = f.find( ".cpp" );
+				ext_pos = source.find( ".cpp" );
 			if ( ext_pos != string::npos )
 			{
-				// use default filename
-				temp_cxx = f;
-				temp = "./" + (string)fl_filename_name( f.substr( 0, ext_pos ).c_str() );
+				// use source
+				printf( "Use source file '%s'\n", source.c_str() );
+				temp_cxx = source;
+				temp = "./" + (string)fl_filename_name( source.substr( 0, ext_pos ).c_str() );
 			}
 		}
 	}
