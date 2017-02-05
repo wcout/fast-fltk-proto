@@ -360,6 +360,7 @@ static int kf_delete_line( int c_, Fl_Text_Editor *e_ )
 	int end = e_->buffer()->line_end( pos );
 	e_->buffer()->remove( beg, end + 1);
 	e_->redraw();
+	return 1;
 }
 
 static int kf_duplicate_line( int c_, Fl_Text_Editor *e_ )
@@ -371,6 +372,7 @@ static int kf_duplicate_line( int c_, Fl_Text_Editor *e_ )
 	e_->buffer()->insert( end + 1, line );
 	free( line );
 	e_->redraw();
+	return 1;
 }
 
 int main( int argc_, char *argv_[] )
@@ -438,7 +440,7 @@ int main( int argc_, char *argv_[] )
 	int cursor_color;
 	cfg.get( "cursor_color", cursor_color, (int)FL_GREEN );
 	editor->cursor_color( (Fl_Color)cursor_color );
-	editor->linenumber_width( 50 ); // show line numbers
+	editor->linenumber_width( (int)( 40. * (double)ts / 14 ) ); // show line numbers
 	editor->textfont( FL_COURIER );
 	editor->textsize( ts );
 	editor->linenumber_size( ts );
