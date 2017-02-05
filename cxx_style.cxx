@@ -81,6 +81,7 @@ const char         *code_types[] = {	// List of known C/C++ types...
 		     "typename",
 		     "union",
 		     "unsigned",
+		     "using",
 		     "virtual",
 		     "void",
 		     "volatile"
