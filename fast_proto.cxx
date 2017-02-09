@@ -59,6 +59,7 @@ string compile_cmd( "g++ -Wall -o $(TARGET) `fltk-config --use-images --cxxflags
 string changed_cmd( "shasum" );
 string changed;
 string style_check_cmd( "cppcheck --enable=all");
+string cxx_template;
 bool ShowWarnings = true;
 bool CheckStyle = true;
 
@@ -377,6 +378,14 @@ static int kf_duplicate_line( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static int kf_save_template( int c_, Fl_Text_Editor *e_ )
+{
+	char *text = e_->buffer()->text();
+	cxx_template = text;
+	free( text );
+	return 1;
+}
+
 int main( int argc_, char *argv_[] )
 {
 	// check if a source file or options are given
@@ -412,6 +421,8 @@ int main( int argc_, char *argv_[] )
 	changed_cmd = text;
 	cfg.get( "style_check_cmd", text, "cppcheck --enable=all" );
 	style_check_cmd = text;
+	cfg.get( "cxx_template", text, "// type FLTK program here..\n" );
+	cxx_template = text;
 
 	if ( source.size() )
 	{
@@ -464,6 +475,7 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 'd', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
+	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
 #ifdef CXX_SYNTAX
 	textbuff->add_modify_callback( style_update, editor );
 #endif
@@ -472,7 +484,7 @@ int main( int argc_, char *argv_[] )
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )
 	{
 		// a new source file is started
-		textbuff->text( "// type FLTK program here..\n" );
+		textbuff->text( cxx_template.c_str() );
 		textbuff->select( 0, textbuff->length() );
 	}
 	else
@@ -512,5 +524,6 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.set( "changed_cmd", changed_cmd.c_str() );
 	cfg.set( "style_check_cmd", style_check_cmd.c_str() );
+	cfg.set( "cxx_template", cxx_template.c_str() );
 	cfg.flush();
 }
