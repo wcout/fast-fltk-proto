@@ -101,14 +101,20 @@ int parse_first_error( int &line_, int &col_, string& err_, string errfile_ )
 	stringstream ifs;
 	ifs << errfile_;
 	string buf;
-	string search( fl_filename_name( temp_cxx.c_str() ) );
+	string temp_cxx_filename( fl_filename_name( temp_cxx.c_str() ) );
 	while ( getline( ifs, buf ) )
 	{
 		// parse for line with error
-		size_t errpos;
-		if ( ( errpos = buf.find( search ) ) <= 2 )
+		string s( temp_cxx );
+		size_t errpos = buf.find( s );
+		if ( errpos == string::npos )
 		{
-			errpos += search.size() + 1;
+			s = temp_cxx_filename;
+			errpos = buf.find( s );
+		}
+		if ( errpos <= 2 )
+		{
+			errpos += s.size() + 1;
 			// found potential error line - line number is afterwards
 			line_ = atoi( buf.substr( errpos ).c_str() );
 			err_ = buf;
@@ -201,12 +207,8 @@ string compileCmd( const string& cmd_, const string& src_ )
 	size_t target_pos = cmd.find( TARGET );
 	if ( target_pos != string::npos )
 	{
-		string target( src_ );
-		size_t pos = target.rfind( '.' );
-		if ( pos != string::npos )
-			target.erase( pos );
 		cmd.erase( target_pos, TARGET.size() );
-		cmd.insert( target_pos, target );
+		cmd.insert( target_pos, temp );
 	}
 	size_t src_pos = cmd.find( SRC );
 	if ( src_pos != string::npos )
@@ -402,7 +404,7 @@ int main( int argc_, char *argv_[] )
 		else if ( arg == "-s" )
 			CheckStyle = false;
 		else if ( arg[0] != '-' )
-			source = arg.substr( 1 );
+			source = arg;
 	}
 	if ( source.size() )
 	{
