@@ -379,8 +379,27 @@ static int kf_duplicate_line( int c_, Fl_Text_Editor *e_ )
 
 int main( int argc_, char *argv_[] )
 {
+	// check if a source file or options are given
+	string source;
+	bool local_prefs( true );
+	for ( int i = 1; i < argc_; i++ )
+	{
+		string arg( argv_[ i ] );
+		if ( arg == "-w" )
+			ShowWarnings = false;
+		else if ( arg == "-s" )
+			CheckStyle = false;
+		else if ( arg == "-p" )
+			local_prefs = false;
+		else if ( arg[0] != '-' )
+			source = arg;
+	}
+
+	static const char APPLICATION[] = "fltk_fast_proto";
 	// read in configurable values
-	Fl_Preferences cfg( ".", NULL, "fltk_fast_proto" );
+	Fl_Preferences &cfg = *( local_prefs  ?
+		new Fl_Preferences( ".", NULL, APPLICATION ) :
+		new Fl_Preferences( Fl_Preferences::USER, "wcout", APPLICATION ) );
 	int x, y, w, h;
 	cfg.get( "x", x, 100 );
 	cfg.get( "y", y, 100 );
@@ -394,18 +413,6 @@ int main( int argc_, char *argv_[] )
 	cfg.get( "style_check_cmd", text, "cppcheck --enable=all" );
 	style_check_cmd = text;
 
-	// check if a source file or options are given
-	string source;
-	for ( int i = 1; i < argc_; i++ )
-	{
-		string arg( argv_[ i ] );
-		if ( arg == "-w" )
-			ShowWarnings = false;
-		else if ( arg == "-s" )
-			CheckStyle = false;
-		else if ( arg[0] != '-' )
-			source = arg;
-	}
 	if ( source.size() )
 	{
 		if ( access( source.c_str(), R_OK ) == 0 )
