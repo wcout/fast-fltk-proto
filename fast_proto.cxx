@@ -39,31 +39,33 @@ using namespace std;
 
 #define CXX_SYNTAX	// use cxx syntax highlighter
 
-pid_t child_pid = -1;
-Fl_Window *win = 0;
-Fl_Text_Buffer *textbuff = 0;
-Fl_Text_Editor *editor = 0;
-Fl_Box *errorbox = 0;
-string temp( "./temp_xxxx" );
-string temp_cxx( temp + ".cxx" );
-string errfile( "error.txt" );
+static const char APPLICATION[] = "fltk_fast_proto";
+static pid_t child_pid = -1;
+static Fl_Window *win = 0;
+static Fl_Text_Buffer *textbuff = 0;
+static Fl_Text_Editor *editor = 0;
+static Fl_Box *errorbox = 0;
+static string temp( "./temp_xxxx" );
+static string temp_cxx( temp + ".cxx" );
+static string errfile( "error.txt" );
 #if 1
 // use simple compile method (without warnings)
-string compile_cmd( "fltk-config --use-images --compile" );
+static string compile_cmd( "fltk-config --use-images --compile" );
 #else
-// use a command like this to specify compiler flags (like -Wall to get warning)
+// use a command like this to specify compiler flags (like -Wall to get warnings)
 // $(TARGET) will be replaced with the executable name
 // $(SRC) will be replaced with the source name
-string compile_cmd( "g++ -Wall -o $(TARGET) `fltk-config --use-images --cxxflags` $(SRC) `fltk-config --use-images --ldflags`" );
+static string compile_cmd( "g++ -Wall -o $(TARGET) `fltk-config --use-images --cxxflags` $(SRC) `fltk-config --use-images --ldflags`" );
 #endif
-string changed_cmd( "shasum" );
-string changed;
-string style_check_cmd( "cppcheck --enable=all");
-string cxx_template;
-bool ShowWarnings = true;
-bool CheckStyle = true;
+static string changed_cmd( "shasum" );
+static string changed;
+static string style_check_cmd( "cppcheck --enable=all");
+static string cxx_template;
 
-bool regain_focus = true;
+static bool ShowWarnings = true;
+static bool CheckStyle = true;
+
+static bool regain_focus = true;
 
 #ifdef CXX_SYNTAX
 #include "cxx_style.cxx"
@@ -386,6 +388,17 @@ static int kf_save_template( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static void show_help_and_exit()
+{
+	printf( "fast_proto [-w] [-s] [-p] [cxxfile]\n"
+	        "\t-w\tdon't show warnings\n"
+	        "\t-s\tdon't show style check messages\n"
+	        "\t-p\tuse global preferences file (otherwise use '%s.prefs' file in current folder)\n"
+	        "\tcxxfile\tuse this existing source file (otherwise use '%s' in current folder)\n",
+		APPLICATION, temp_cxx.c_str() );
+	exit( 0 );
+}
+
 int main( int argc_, char *argv_[] )
 {
 	// check if a source file or options are given
@@ -394,7 +407,9 @@ int main( int argc_, char *argv_[] )
 	for ( int i = 1; i < argc_; i++ )
 	{
 		string arg( argv_[ i ] );
-		if ( arg == "-w" )
+		if ( arg == "--help" )
+			show_help_and_exit();
+		else if ( arg == "-w" )
 			ShowWarnings = false;
 		else if ( arg == "-s" )
 			CheckStyle = false;
@@ -404,7 +419,6 @@ int main( int argc_, char *argv_[] )
 			source = arg;
 	}
 
-	static const char APPLICATION[] = "fltk_fast_proto";
 	// read in configurable values
 	Fl_Preferences &cfg = *( local_prefs  ?
 		new Fl_Preferences( ".", NULL, APPLICATION ) :
