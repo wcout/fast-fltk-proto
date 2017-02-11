@@ -2,102 +2,255 @@
 #define TS 14 // default editor textsize
 Fl_Text_Buffer     *stylebuf = 0;
 Fl_Text_Display::Style_Table_Entry
-                   styletable[] = {	// Style table
-		     { FL_BLACK,      FL_COURIER,           TS }, // A - Plain
-		     { FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS }, // B - Line comments
-		     { FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS }, // C - Block comments
-		     { FL_BLUE,       FL_COURIER,           TS }, // D - Strings
-		     { FL_DARK_RED,   FL_COURIER,           TS }, // E - Directives
-		     { FL_DARK_RED,   FL_COURIER_BOLD,      TS }, // F - Types
-		     { FL_BLUE,       FL_COURIER_BOLD,      TS }, // G - Keywords
-		   };
-const char         *code_keywords[] = {	// List of known C/C++ keywords...
-		     "and",
-		     "and_eq",
-		     "asm",
-		     "bitand",
-		     "bitor",
-		     "break",
-		     "case",
-		     "catch",
-		     "compl",
-		     "continue",
-		     "default",
-		     "delete",
-		     "do",
-		     "else",
-		     "false",
-		     "for",
-		     "goto",
-		     "if",
-		     "new",
-		     "not",
-		     "not_eq",
-		     "operator",
-		     "or",
-		     "or_eq",
-		     "return",
-		     "switch",
-		     "template",
-		     "this",
-		     "throw",
-		     "true",
-		     "try",
-		     "while",
-		     "xor",
-		     "xor_eq"
-		   };
-const char         *code_types[] = {	// List of known C/C++ types...
-		     "auto",
-		     "bool",
-		     "char",
-		     "class",
-		     "const",
-		     "const_cast",
-		     "double",
-		     "dynamic_cast",
-		     "enum",
-		     "explicit",
-		     "extern",
-		     "float",
-		     "friend",
-		     "inline",
-		     "int",
-		     "long",
-		     "mutable",
-		     "namespace",
-		     "private",
-		     "protected",
-		     "public",
-		     "register",
-		     "short",
-		     "signed",
-		     "sizeof",
-		     "static",
-		     "static_cast",
-		     "struct",
-		     "template",
-		     "typedef",
-		     "typename",
-		     "union",
-		     "unsigned",
-		     "using",
-		     "virtual",
-		     "void",
-		     "volatile"
-		   };
-
+	styletable[] = {                                // Style table
+	{ FL_BLACK,      FL_COURIER,           TS },    // A - Plain
+//	{ FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS },    // B - Line comments
+//	{ FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS },    // C - Block comments
+	{ FL_DARK_GREEN, FL_COURIER,           TS },    // B - Line comments
+	{ FL_DARK_GREEN, FL_COURIER,           TS },    // C - Block comments
+	{ FL_BLUE,       FL_COURIER,           TS },    // D - Strings
+	{ FL_DARK_RED,   FL_COURIER,           TS },    // E - Directives
+	{ FL_DARK_RED,   FL_COURIER_BOLD,      TS },    // F - Types
+	{ FL_BLUE,       FL_COURIER_BOLD,      TS },    // G - Keywords
+	{ FL_BLACK,      FL_COURIER_BOLD,      TS },    // H - FLTK classes
+	{ FL_DARK_RED,   FL_COURIER,           TS },    // H - FLTK enumerations
+};
+const char         *code_keywords[] = { // List of known C/C++ keywords...
+	"and",
+	"and_eq",
+	"asm",
+	"bitand",
+	"bitor",
+	"break",
+	"case",
+	"catch",
+	"compl",
+	"continue",
+	"default",
+	"delete",
+	"do",
+	"else",
+	"false",
+	"for",
+	"goto",
+	"if",
+	"new",
+	"not",
+	"not_eq",
+	"operator",
+	"or",
+	"or_eq",
+	"return",
+	"switch",
+	"template",
+	"this",
+	"throw",
+	"true",
+	"try",
+	"while",
+	"xor",
+	"xor_eq"
+};
+const char         *code_types[] = {    // List of known C/C++ types...
+	"auto",
+	"bool",
+	"char",
+	"class",
+	"const",
+	"const_cast",
+	"double",
+	"dynamic_cast",
+	"enum",
+	"explicit",
+	"extern",
+	"float",
+	"friend",
+	"inline",
+	"int",
+	"long",
+	"mutable",
+	"namespace",
+	"private",
+	"protected",
+	"public",
+	"register",
+	"short",
+	"signed",
+	"sizeof",
+	"static",
+	"static_cast",
+	"struct",
+	"template",
+	"typedef",
+	"typename",
+	"union",
+	"unsigned",
+	"using",
+	"virtual",
+	"void",
+	"volatile"
+};
+const char         *fltk_keywords[] = { // List of some FLTK keywords...
+	"Fl",
+	"Fl_Adjuster",
+	"Fl_Bitmap",
+	"Fl_BMP_Image",
+	"Fl_Box",
+	"Fl_Browser",
+	"Fl_Button",
+	"Fl_Cairo_Window",
+	"Fl_Chart",
+	"Fl_Check_Browser",
+	"Fl_Check_Button",
+	"Fl_Choice",
+	"Fl_Clock",
+	"Fl_Color_Chooser",
+	"Fl_Copy_Surface",
+	"Fl_Counter",
+	"Fl_Device",
+	"Fl_Dial",
+	"Fl_Double_Window",
+	"Fl_File_Browser",
+	"Fl_File_Chooser",
+	"Fl_File_Icon",
+	"Fl_File_Input",
+	"Fl_Fill_Dial",
+	"Fl_Fill_Slider",
+	"Fl_Float_Input",
+	"Fl_FormsBitmap",
+	"Fl_FormsPixmap",
+	"Fl_Free",
+	"Fl_GIF_Image",
+	"Fl_Gl_Window",
+	"Fl_Group",
+	"Fl_Help_Dialog",
+	"Fl_Help_View",
+	"Fl_Hold_Browser",
+	"Fl_Hor_Fill_Slider",
+	"Fl_Hor_Nice_Slider",
+	"Fl_Hor_Slider",
+	"Fl_Hor_Value_Slider",
+	"Fl_Image",
+	"Fl_Image_Surface",
+	"Fl_Input_Choice",
+	"Fl_Input",
+	"Fl_Int_Input",
+	"Fl_JPEG_Image",
+	"Fl_Light_Button",
+	"Fl_Line_Dial",
+	"Fl_Menu_Bar",
+	"Fl_Menu_Button",
+	"Fl_Menu",
+	"Fl_Menu_Item",
+	"Fl_Menu_Window",
+	"Fl_Multi_Browser",
+	"Fl_Multi_Label",
+	"Fl_Multiline_Input",
+	"Fl_Multiline_Output",
+	"Fl_Native_File_Chooser",
+	"Fl_Nice_Slider",
+	"Fl_Object",
+	"Fl_Output",
+	"Fl_Overlay_Window",
+	"Fl_Pack",
+	"Fl_Paged_Device",
+	"Fl_Pixmap",
+	"Fl_Plugin",
+	"Fl_PNG_Image",
+	"Fl_PNM_Image",
+	"Fl_Positioner",
+	"Fl_PostScript",
+	"Fl_Preferences",
+	"Fl_Printer",
+	"Fl_Progress",
+	"Fl_Radio_Button",
+	"Fl_Radio_Light_Button",
+	"Fl_Radio_Round_Button",
+	"Fl_Repeat_Button",
+	"Fl_Return_Button",
+	"Fl_RGB_Image",
+	"Fl_Roller",
+	"Fl_Round_Button",
+	"Fl_Round_Clock",
+	"Fl_Scrollbar",
+	"Fl_Scroll",
+	"Fl_Secret_Input",
+	"Fl_Select_Browser",
+	"Fl_Shared_Image",
+	"Fl_Simple_Counter",
+	"Fl_Single_Window",
+	"Fl_Slider",
+	"Fl_Spinner",
+	"Fl_Sys_Menu_Bar",
+	"Fl_Table",
+	"Fl_Table_Row",
+	"Fl_Tabs",
+	"Fl_Text_Buffer",
+	"Fl_Text_Display",
+	"Fl_Text_Editor",
+	"Fl_Tiled_Image",
+	"Fl_Tile",
+	"Fl_Timer",
+	"Fl_Toggle_Button",
+	"Fl_Toggle_Light_Button",
+	"Fl_Toggle_Round_Button",
+	"Fl_Tooltip",
+	"Fl_Tree",
+	"Fl_Tree_Item_Array",
+	"Fl_Tree_Item",
+	"Fl_Tree_Prefs",
+	"Fl_Valuator",
+	"Fl_Value_Input",
+	"Fl_Value_Output",
+	"Fl_Value_Slider",
+	"Fl_Widget",
+	"Fl_Window",
+	"Fl_Wizard",
+	"Fl_XBM_Image",
+	"Fl_XPM_Image",
+	"fl_arc",
+	"fl_circle",
+	"fl_color",
+	"fl_curve",
+	"fl_line",
+	"fl_loop",
+	"fl_pie",
+	"fl_polygon",
+	"fl_rect",
+	"fl_rectf",
+	"fl_vertex",
+	"fl_xyline",
+	"fl_yxline"
+};
+const char         *fltk_enums[] = { // List of some FLTK enumerations...
+	"FL_BLACK",
+	"FL_BLUE",
+	"FL_CYAN",
+	"FL_DARK_BLUE",
+	"FL_DARK_CYAN",
+	"FL_DARK_GREEN",
+	"FL_DARK_MAGENTA",
+	"FL_DARK_RED",
+	"FL_DARK_YELLOW",
+	"FL_GRAY",
+	"FL_GREEN",
+	"FL_MAGENTA",
+	"FL_RED",
+	"FL_WHITE",
+	"FL_YELLOW"
+};
 
 //
 // 'compare_keywords()' - Compare two keywords...
 //
 
 extern "C" {
-  int
-  compare_keywords(const void *a,
-                   const void *b) {
-    return (strcmp(*((const char **)a), *((const char **)b)));
-  }
+int
+compare_keywords(const void *a,
+	const void *b)
+{
+	return strcmp(*((const char **)a), *((const char **)b));
+}
 }
 
 //
@@ -106,135 +259,206 @@ extern "C" {
 
 void
 style_parse(const char *text,
-            char       *style,
-	    int        length) {
-  char	     current;
-  int	     col;
-  int	     last;
-  char	     buf[255],
-             *bufptr;
-  const char *temp;
+	char       *style,
+	int length)
+{
+	char current;
+	int col;
+	int last;
+	char buf[255],
+	*bufptr;
+	const char *temp;
 
-  // Style letters:
-  //
-  // A - Plain
-  // B - Line comments
-  // C - Block comments
-  // D - Strings
-  // E - Directives
-  // F - Types
-  // G - Keywords
+	// Style letters:
+	//
+	// A - Plain
+	// B - Line comments
+	// C - Block comments
+	// D - Strings
+	// E - Directives
+	// F - Types
+	// G - Keywords
+	// H - FLTK Classes
+	// I - FLTK Enumerations
 
-  for (current = *style, col = 0, last = 0; length > 0; length --, text ++) {
-    if (current == 'B' || current == 'F' || current == 'G') current = 'A';
-    if (current == 'A') {
-      // Check for directives, comments, strings, and keywords...
-      if (col == 0 && *text == '#') {
-        // Set style to directive
-        current = 'E';
-      } else if (strncmp(text, "//", 2) == 0) {
-        current = 'B';
-	for (; length > 0 && *text != '\n'; length --, text ++) *style++ = 'B';
+	for (current = *style, col = 0, last = 0; length > 0; length--, text++)
+	{
+		if (current == 'B' || current == 'F' || current == 'G' || current == 'H' || current == 'I')
+			current = 'A';
+		if (current == 'A')
+		{
+			// Check for directives, comments, strings, and keywords...
+			if (col == 0 && *text == '#')
+			{
+				// Set style to directive
+				current = 'E';
+			}
+			else if (strncmp(text, "//", 2) == 0)
+			{
+				current = 'B';
+				for (; length > 0 && *text != '\n'; length--, text++)
+					*style++ = 'B';
 
-        if (length == 0) break;
-      } else if (strncmp(text, "/*", 2) == 0) {
-        current = 'C';
-      } else if (strncmp(text, "\\\"", 2) == 0) {
-        // Quoted quote...
-	*style++ = current;
-	*style++ = current;
-	text ++;
-	length --;
-	col += 2;
-	continue;
-      } else if (*text == '\"') {
-        current = 'D';
-      } else if (!last && (islower((*text)&255) || *text == '_')) {
-        // Might be a keyword...
-	for (temp = text, bufptr = buf;
-	     (islower((*temp)&255) || *temp == '_') && bufptr < (buf + sizeof(buf) - 1);
-	     *bufptr++ = *temp++) {
-	  // nothing
-        }
+				if (length == 0)
+					break;
+			}
+			else if (strncmp(text, "/*", 2) == 0)
+			{
+				current = 'C';
+			}
+			else if (strncmp(text, "\\\"", 2) == 0)
+			{
+				// Quoted quote...
+				*style++ = current;
+				*style++ = current;
+				text++;
+				length--;
+				col += 2;
+				continue;
+			}
+			else if (*text == '\"')
+			{
+				current = 'D';
+			}
+			else if (!last && !isspace(*text))
+			{
+				// Might be a keyword...
+				for (temp = text, bufptr = buf;
+				     (!isspace(*temp) && *temp != '(' && *temp != '*' && *temp != ':' && *temp != ';') && bufptr < (buf + sizeof(buf) - 1);
+				     *bufptr++ = *temp++)
+				{
+					// nothing
+				}
+				*bufptr = '\0';
 
-        if (!islower((*temp)&255) && *temp != '_') {
-	  *bufptr = '\0';
+				if (isspace(*temp) || *temp == '(' || *temp == '*' || *temp == ':' || *temp == ';')
+				{
 
-          bufptr = buf;
+					bufptr = buf;
 
-	  if (bsearch(&bufptr, code_types,
-	              sizeof(code_types) / sizeof(code_types[0]),
-		      sizeof(code_types[0]), compare_keywords)) {
-	    while (text < temp) {
-	      *style++ = 'F';
-	      text ++;
-	      length --;
-	      col ++;
-	    }
+					if (bsearch(&bufptr, fltk_keywords,
+							 sizeof(fltk_keywords) / sizeof(fltk_keywords[0]),
+							 sizeof(fltk_keywords[0]), compare_keywords))
+					{
+						while (text < temp)
+						{
+							*style++ = 'H';
+							text++;
+							length--;
+							col++;
+						}
 
-	    text --;
-	    length ++;
-	    last = 1;
-	    continue;
-	  } else if (bsearch(&bufptr, code_keywords,
-	                     sizeof(code_keywords) / sizeof(code_keywords[0]),
-		             sizeof(code_keywords[0]), compare_keywords)) {
-	    while (text < temp) {
-	      *style++ = 'G';
-	      text ++;
-	      length --;
-	      col ++;
-	    }
+						text--;
+						length++;
+						last = 1;
+						continue;
+					}
+					else if (bsearch(&bufptr, fltk_enums,
+							 sizeof(fltk_enums) / sizeof(fltk_enums[0]),
+							 sizeof(fltk_enums[0]), compare_keywords))
+					{
+						while (text < temp)
+						{
+							*style++ = 'I';
+							text++;
+							length--;
+							col++;
+						}
 
-	    text --;
-	    length ++;
-	    last = 1;
-	    continue;
-	  }
+						text--;
+						length++;
+						last = 1;
+						continue;
+					}
+					else if (bsearch(&bufptr, code_types,
+						    sizeof(code_types) / sizeof(code_types[0]),
+						    sizeof(code_types[0]), compare_keywords))
+					{
+						while (text < temp)
+						{
+							*style++ = 'F';
+							text++;
+							length--;
+							col++;
+						}
+
+						text--;
+						length++;
+						last = 1;
+						continue;
+					}
+					else if (bsearch(&bufptr, code_keywords,
+							 sizeof(code_keywords) / sizeof(code_keywords[0]),
+							 sizeof(code_keywords[0]), compare_keywords))
+					{
+						while (text < temp)
+						{
+							*style++ = 'G';
+							text++;
+							length--;
+							col++;
+						}
+
+						text--;
+						length++;
+						last = 1;
+						continue;
+					}
+				}
+			}
+		}
+		else if (current == 'C' && strncmp(text, "*/", 2) == 0)
+		{
+			// Close a C comment...
+			*style++ = current;
+			*style++ = current;
+			text++;
+			length--;
+			current = 'A';
+			col += 2;
+			continue;
+		}
+		else if (current == 'D')
+		{
+			// Continuing in string...
+			if (strncmp(text, "\\\"", 2) == 0)
+			{
+				// Quoted end quote...
+				*style++ = current;
+				*style++ = current;
+				text++;
+				length--;
+				col += 2;
+				continue;
+			}
+			else if (*text == '\"')
+			{
+				// End quote...
+				*style++ = current;
+				col++;
+				current = 'A';
+				continue;
+			}
+		}
+
+		// Copy style info...
+		if (current == 'A' && (*text == '{' || *text == '}'))
+			*style++ = 'G';
+		else
+			*style++ = current;
+		col++;
+
+		last = isalnum((*text) & 255) || *text == '_' || *text == '.';
+
+		if (*text == '\n')
+		{
+			// Reset column and possibly reset the style
+			col = 0;
+			if (current == 'B' || current == 'E')
+				current = 'A';
+		}
 	}
-      }
-    } else if (current == 'C' && strncmp(text, "*/", 2) == 0) {
-      // Close a C comment...
-      *style++ = current;
-      *style++ = current;
-      text ++;
-      length --;
-      current = 'A';
-      col += 2;
-      continue;
-    } else if (current == 'D') {
-      // Continuing in string...
-      if (strncmp(text, "\\\"", 2) == 0) {
-        // Quoted end quote...
-	*style++ = current;
-	*style++ = current;
-	text ++;
-	length --;
-	col += 2;
-	continue;
-      } else if (*text == '\"') {
-        // End quote...
-	*style++ = current;
-	col ++;
-	current = 'A';
-	continue;
-      }
-    }
-
-    // Copy style info...
-    if (current == 'A' && (*text == '{' || *text == '}')) *style++ = 'G';
-    else *style++ = current;
-    col ++;
-
-    last = isalnum((*text)&255) || *text == '_' || *text == '.';
-
-    if (*text == '\n') {
-      // Reset column and possibly reset the style
-      col = 0;
-      if (current == 'B' || current == 'E') current = 'A';
-    }
-  }
-}
+} // style_parse
 
 
 //
@@ -242,22 +466,24 @@ style_parse(const char *text,
 //
 
 void
-style_init(int ts = TS) {
-  for (size_t i = 0; i < sizeof(styletable) / sizeof(styletable[0]); i++)
-    styletable[i].size = ts;
-  char *style = new char[textbuff->length() + 1];
-  char *text = textbuff->text();
+style_init(int ts = TS)
+{
+	for (size_t i = 0; i < sizeof(styletable) / sizeof(styletable[0]); i++)
+		styletable[i].size = ts;
+	char *style = new char[textbuff->length() + 1];
+	char *text = textbuff->text();
 
-  memset(style, 'A', textbuff->length());
-  style[textbuff->length()] = '\0';
+	memset(style, 'A', textbuff->length());
+	style[textbuff->length()] = '\0';
 
-  if (!stylebuf) stylebuf = new Fl_Text_Buffer(textbuff->length());
+	if (!stylebuf)
+		stylebuf = new Fl_Text_Buffer(textbuff->length());
 
-  style_parse(text, style, textbuff->length());
+	style_parse(text, style, textbuff->length());
 
-  stylebuf->text(style);
-  delete[] style;
-  free(text);
+	stylebuf->text(style);
+	delete[] style;
+	free(text);
 }
 
 
@@ -266,7 +492,8 @@ style_init(int ts = TS) {
 //
 
 void
-style_unfinished_cb(int, void*) {
+style_unfinished_cb(int, void *)
+{
 }
 
 
@@ -275,57 +502,61 @@ style_unfinished_cb(int, void*) {
 //
 
 void
-style_update(int        pos,		// I - Position of update
-             int        nInserted,	// I - Number of inserted chars
-	     int        nDeleted,	// I - Number of deleted chars
-             int        /*nRestyled*/,	// I - Number of restyled chars
-	     const char * /*deletedText*/,// I - Text that was deleted
-             void       *cbArg) {	// I - Callback data
-  int	start,				// Start of text
-	end;				// End of text
-  char	last,				// Last style on line
-	*style,				// Style data
-	*text;				// Text data
+style_update(int pos,                   // I - Position of update
+	int nInserted,                  // I - Number of inserted chars
+	int nDeleted,                   // I - Number of deleted chars
+	int /*nRestyled*/,              // I - Number of restyled chars
+	const char * /*deletedText*/,   // I - Text that was deleted
+	void       *cbArg)              // I - Callback data
+{ int start,                            // Start of text
+	  end;                          // End of text
+  char last,                            // Last style on line
+  *style,                               // Style data
+  *text;                                // Text data
 
 
-  // If this is just a selection change, just unselect the style buffer...
-  if (nInserted == 0 && nDeleted == 0) {
-    stylebuf->unselect();
-    return;
+	// If this is just a selection change, just unselect the style buffer...
+  if (nInserted == 0 && nDeleted == 0)
+  {
+	  stylebuf->unselect();
+	  return;
   }
 
-  // Track changes in the text buffer...
-  if (nInserted > 0) {
-    // Insert characters into the style buffer...
-    style = new char[nInserted + 1];
-    memset(style, 'A', nInserted);
-    style[nInserted] = '\0';
+	// Track changes in the text buffer...
+  if (nInserted > 0)
+  {
+	  // Insert characters into the style buffer...
+	  style = new char[nInserted + 1];
+	  memset(style, 'A', nInserted);
+	  style[nInserted] = '\0';
 
-    stylebuf->replace(pos, pos + nDeleted, style);
-    delete[] style;
-  } else {
-    // Just delete characters in the style buffer...
-    stylebuf->remove(pos, pos + nDeleted);
+	  stylebuf->replace(pos, pos + nDeleted, style);
+	  delete[] style;
+  }
+  else
+  {
+	  // Just delete characters in the style buffer...
+	  stylebuf->remove(pos, pos + nDeleted);
   }
 
-  // Select the area that was just updated to avoid unnecessary
-  // callbacks...
+	// Select the area that was just updated to avoid unnecessary
+	// callbacks...
   stylebuf->select(pos, pos + nInserted - nDeleted);
 
-  // Re-parse the changed region; we do this by parsing from the
-  // beginning of the previous line of the changed region to the end of
-  // the line of the changed region...  Then we check the last
-  // style character and keep updating if we have a multi-line
-  // comment character...
+	// Re-parse the changed region; we do this by parsing from the
+	// beginning of the previous line of the changed region to the end of
+	// the line of the changed region...  Then we check the last
+	// style character and keep updating if we have a multi-line
+	// comment character...
   start = textbuff->line_start(pos);
 //  if (start > 0) start = textbuff->line_start(start - 1);
   end   = textbuff->line_end(pos + nInserted);
   text  = textbuff->text_range(start, end);
   style = stylebuf->text_range(start, end);
-  if (start==end)
-    last = 0;
+  if (start == end)
+	  last = 0;
   else
-    last  = style[end - start - 1];
+	  last  = style[end - start - 1];
 
 //  printf("start = %d, end = %d, text = \"%s\", style = \"%s\", last='%c'...\n",
 //         start, end, text, style, last);
@@ -338,25 +569,26 @@ style_update(int        pos,		// I - Position of update
   stylebuf->replace(start, end, style);
   ((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
 
-  if (start==end || last != style[end - start - 1]) {
+  if (start == end || last != style[end - start - 1])
+  {
 //    printf("Recalculate the rest of the buffer style\n");
-    // Either the user deleted some text, or the last character
-    // on the line changed styles, so reparse the
-    // remainder of the buffer...
-    free(text);
-    free(style);
+	  // Either the user deleted some text, or the last character
+	  // on the line changed styles, so reparse the
+	  // remainder of the buffer...
+	  free(text);
+	  free(style);
 
-    end   = textbuff->length();
-    text  = textbuff->text_range(start, end);
-    style = stylebuf->text_range(start, end);
+	  end   = textbuff->length();
+	  text  = textbuff->text_range(start, end);
+	  style = stylebuf->text_range(start, end);
 
-    style_parse(text, style, end - start);
+	  style_parse(text, style, end - start);
 
-    stylebuf->replace(start, end, style);
-    ((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
+	  stylebuf->replace(start, end, style);
+	  ((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
   }
 
   free(text);
   free(style);
-}
+} // style_update
 
