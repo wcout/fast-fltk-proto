@@ -469,7 +469,10 @@ int main( int argc_, char *argv_[] )
 	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
 	errorbox->box( FL_FLAT_BOX );
 	int bgcolor;
-	cfg.get( "bgcolor", bgcolor, (int)FL_WHITE );
+	if ( CxxSyntax )
+		cfg.get( "bgcolor_syntax", bgcolor, (int)FL_WHITE );
+	else
+		cfg.get( "bgcolor", bgcolor, (int)fl_lighter( FL_BLUE ) );
 	editor->color( Fl_Color( bgcolor ) );
 	editor->textcolor( fl_contrast( FL_WHITE, editor->color() ) );
 	editor->cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
@@ -536,7 +539,7 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "w", win->w() );
 	cfg.set( "h", win->h() );
 	cfg.set( "ts", editor->textsize() );
-	cfg.set( "bgcolor", (int)editor->color() );
+	cfg.set( CxxSyntax ? "bgcolor_syntax" : "bgcolor", (int)editor->color() );
 	cfg.set( "cursor_color", (int)editor->cursor_color() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.set( "changed_cmd", changed_cmd.c_str() );
