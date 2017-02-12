@@ -65,6 +65,7 @@ static string backup_file;
 static bool ShowWarnings = true;
 static bool CheckStyle = true;
 static int CxxSyntax = -1;
+static bool FirstMessage = true;
 
 static bool regain_focus = true;
 
@@ -279,7 +280,11 @@ int compile_and_run( string code_ )
 	if ( result.empty() )
 	{
 		textbuff->unhighlight();
-		errorbox->copy_label( "No errors" );
+		if ( !FirstMessage )
+			errorbox->copy_label( "No errors" );
+		else
+			errorbox->copy_label( "^y = delete line, ^l = duplicate line, ^r = restart, ^t = save template, ESC=exit" );
+		FirstMessage = false;
 		errorbox->color( FL_GRAY );
 	}
 	// re-run only if exe changed
@@ -404,6 +409,8 @@ static void show_help_and_exit()
 	        "\t-w\tdon't show warnings\n"
 	        "\t-s\tdon't show style check messages\n"
 	        "\t-p\tuse global preferences file (otherwise use '%s.prefs' file in current folder)\n"
+	        "\t-h\tdon't syntax highlight source\n"
+	        "\t-hf\tdon't syntax highlight FLTK keywords\n"
 	        "\tcxxfile\tuse this existing source file (otherwise use '%s' in current folder)\n",
 		APPLICATION, temp_cxx.c_str() );
 	exit( 0 );
