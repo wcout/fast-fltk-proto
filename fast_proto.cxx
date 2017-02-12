@@ -27,6 +27,7 @@
 #include <FL/Fl_Preferences.H>
 #include <FL/Fl.H>
 #include <FL/filename.H>
+#include <FL/fl_ask.H>
 
 #include <string>
 #include <fstream>
@@ -59,6 +60,7 @@ static string changed_cmd( "shasum" );
 static string changed;
 static string style_check_cmd( "cppcheck --enable=all");
 static string cxx_template;
+static string backup_file;
 
 static bool ShowWarnings = true;
 static bool CheckStyle = true;
@@ -387,6 +389,15 @@ static int kf_save_template( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static int kf_restart( int c_, Fl_Text_Editor *e_ )
+{
+	// restore from backup
+	if ( backup_file.size() &&
+	     fl_choice( "Restart loosing all changes?", "Yes", "No", 0 ) == 0 )
+		textbuff->loadfile( backup_file.c_str() );
+	return 1;
+}
+
 static void show_help_and_exit()
 {
 	printf( "fast_proto [-w] [-s] [-p] [cxxfile]\n"
@@ -492,6 +503,7 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
+	editor->add_key_binding( 'r', FL_CTRL, kf_restart );
 
 	editor->buffer( textbuff ); // attach text buffer to editor
 	if ( CxxSyntax )
@@ -512,8 +524,9 @@ int main( int argc_, char *argv_[] )
 	else
 	{
 		// make a "backup" of the original source
-		string backup_file( temp_cxx + ".orig" );
-		textbuff->outputfile( backup_file.c_str(), 0, textbuff->length() );
+		backup_file = temp_cxx + ".orig";
+		if ( textbuff->outputfile( backup_file.c_str(), 0, textbuff->length() ) )
+			backup_file.erase();
 	}
 
 	// position cursor at end of file
