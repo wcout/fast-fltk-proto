@@ -37,8 +37,6 @@
 #endif
 using namespace std;
 
-#define CXX_SYNTAX	// use cxx syntax highlighter
-
 static const char APPLICATION[] = "fltk_fast_proto";
 static pid_t child_pid = -1;
 static Fl_Window *win = 0;
@@ -64,12 +62,11 @@ static string cxx_template;
 
 static bool ShowWarnings = true;
 static bool CheckStyle = true;
+static int CxxSyntax = -1;
 
 static bool regain_focus = true;
 
-#ifdef CXX_SYNTAX
 #include "cxx_style.cxx"
-#endif
 
 void focus_cb( void *v_ )
 {
@@ -415,6 +412,10 @@ int main( int argc_, char *argv_[] )
 			CheckStyle = false;
 		else if ( arg == "-p" )
 			local_prefs = false;
+		else if ( arg == "-h" )
+			CxxSyntax = 0;
+		else if ( arg == "-hf" )
+			CxxSyntax = 1;
 		else if ( arg[0] != '-' )
 			source = arg;
 	}
@@ -460,9 +461,10 @@ int main( int argc_, char *argv_[] )
 	textbuff = new Fl_Text_Buffer();
 	int ts;
 	cfg.get( "ts", ts, 14 );
-#ifdef CXX_SYNTAX
-	style_init( ts );
-#endif
+	if ( CxxSyntax )
+	{
+		style_init( ts, CxxSyntax != 1 );
+	}
 	editor = new Fl_Text_Editor( 0, 0, win->w(), win->h() - 30 );
 	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
 	errorbox->box( FL_FLAT_BOX );
@@ -478,21 +480,22 @@ int main( int argc_, char *argv_[] )
 	editor->textfont( FL_COURIER );
 	editor->textsize( ts );
 	editor->linenumber_size( ts );
-	editor->buffer( textbuff ); // attach text buffer to editor
-#ifdef CXX_SYNTAX
-	editor->highlight_data( stylebuf, styletable,
-	                        sizeof(styletable) / sizeof(styletable[0]),
-	                        'A', style_unfinished_cb, 0);
-#endif
+
 	// add some key shortcuts (line deletion/duplication)
 	editor->add_key_binding( 'y', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'd', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
-#ifdef CXX_SYNTAX
-	textbuff->add_modify_callback( style_update, editor );
-#endif
+
+	editor->buffer( textbuff ); // attach text buffer to editor
+	if ( CxxSyntax )
+	{
+		editor->highlight_data( stylebuf, styletable,
+		                        sizeof(styletable) / sizeof(styletable[0]),
+		                        'A', style_unfinished_cb, 0);
+		textbuff->add_modify_callback( style_update, editor );
+	}
 	textbuff->add_modify_callback( changed_cb, textbuff );
 	textbuff->tab_distance( 3 );
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )

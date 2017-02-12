@@ -1,7 +1,10 @@
 // Syntax highlighting stuff...
 #define TS 14 // default editor textsize
-Fl_Text_Buffer     *stylebuf = 0;
-Fl_Text_Display::Style_Table_Entry
+
+static Fl_Text_Buffer *stylebuf = 0;
+static bool HighLightFltk = true;
+
+static Fl_Text_Display::Style_Table_Entry
 	styletable[] = {                                // Style table
 	{ FL_BLACK,      FL_COURIER,           TS },    // A - Plain
 	{ FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS },    // B - Line comments
@@ -12,7 +15,8 @@ Fl_Text_Display::Style_Table_Entry
 	{ FL_BLUE,       FL_COURIER_BOLD,      TS },    // G - Keywords
 	{ FL_BLACK,      FL_COURIER_BOLD,      TS },    // H - FLTK Keywords
 };
-const char         *code_keywords[] = { // List of known C/C++ keywords...
+
+static const char *code_keywords[] = { // List of known C/C++ keywords...
 	"and",
 	"and_eq",
 	"asm",
@@ -48,7 +52,8 @@ const char         *code_keywords[] = { // List of known C/C++ keywords...
 	"xor",
 	"xor_eq"
 };
-const char         *code_types[] = {    // List of known C/C++ types...
+
+static const char *code_types[] = {    // List of known C/C++ types...
 	"auto",
 	"bool",
 	"char",
@@ -87,7 +92,8 @@ const char         *code_types[] = {    // List of known C/C++ types...
 	"void",
 	"volatile"
 };
-const char         *fltk_keywords[] = { // List of some FLTK keywords...
+
+static const char *fltk_keywords[] = { // List of some FLTK keywords...
 	"FL_ACCUM",
 	"FL_ACTIVATE",
 	"FL_ALIGN_BOTTOM",
@@ -641,8 +647,7 @@ const char         *fltk_keywords[] = { // List of some FLTK keywords...
 //
 
 extern "C" {
-int
-compare_keywords(const void *a,
+static int compare_keywords(const void *a,
 	const void *b)
 {
 	return strcmp(*((const char **)a), *((const char **)b));
@@ -658,8 +663,7 @@ static inline bool iskey(char c)
 // 'style_parse()' - Parse text and produce style data.
 //
 
-void
-style_parse(const char *text,
+static void style_parse(const char *text,
 	char       *style,
 	int length)
 {
@@ -770,7 +774,7 @@ style_parse(const char *text,
 						continue;
 					}
 
-					else if (bsearch(&bufptr, fltk_keywords,
+					else if (HighLightFltk && bsearch(&bufptr, fltk_keywords,
 							 sizeof(fltk_keywords) / sizeof(fltk_keywords[0]),
 							 sizeof(fltk_keywords[0]), compare_keywords))
 					{
@@ -851,8 +855,9 @@ style_parse(const char *text,
 //
 
 void
-style_init(int ts = TS)
+style_init(int ts = TS, bool highlight_fltk = true)
 {
+	HighLightFltk = highlight_fltk;
 	for (size_t i = 0; i < sizeof(styletable) / sizeof(styletable[0]); i++)
 		styletable[i].size = ts;
 	char *style = new char[textbuff->length() + 1];
