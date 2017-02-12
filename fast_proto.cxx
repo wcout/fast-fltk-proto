@@ -382,6 +382,8 @@ static int kf_save_template( int c_, Fl_Text_Editor *e_ )
 	char *text = e_->buffer()->text();
 	cxx_template = text;
 	free( text );
+	if ( errorbox->color() == FL_GRAY )	// save only when no errors/warnings
+		errorbox->copy_label( "Saved as template!" );
 	return 1;
 }
 
