@@ -32,6 +32,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <map>
 #include <unistd.h>
 #ifndef WIN32
 #include <sys/wait.h>
@@ -61,6 +62,7 @@ static string changed;
 static string style_check_cmd( "cppcheck --enable=all");
 static string cxx_template;
 static string backup_file;
+static map<string, bool> warning_ignores;
 
 static bool ShowWarnings = true;
 static bool CheckStyle = true;
@@ -68,6 +70,11 @@ static int CxxSyntax = -1;
 static bool FirstMessage = true;
 
 static bool regain_focus = true;
+
+static const Fl_Color ErrorColor = FL_RED;
+static const Fl_Color WarningColor = FL_GREEN;
+static const Fl_Color StyleWarningColor = FL_YELLOW;
+static const Fl_Color OkColor = FL_GRAY;
 
 #include "cxx_style.cxx"
 
@@ -96,7 +103,8 @@ void focus_cb( void *v_ )
 	}
 }
 
-int parse_first_error( int &line_, int &col_, string& err_, string errfile_ )
+int parse_first_error( int &line_, int &col_, string& err_, string errfile_,
+                       bool warning_ = false )
 {
 	line_ = 0;
 	col_ = -1;
@@ -119,10 +127,13 @@ int parse_first_error( int &line_, int &col_, string& err_, string errfile_ )
 		{
 			errpos += s.size() + 1;
 			// found potential error line - line number is afterwards
-			line_ = atoi( buf.substr( errpos ).c_str() );
+			int line = atoi( buf.substr( errpos ).c_str() );
 			err_ = buf;
-			if ( line_ ) // if error line found, we are finished
+			if ( line ) // if error line found, we are finished
 			{
+				if ( warning_ && warning_ignores[err_] )
+					continue;
+				line_ = line;
 				// try to read a column position
 				size_t col_pos = buf.find( ':', errpos );
 				if ( col_pos != string::npos && col_pos - errpos < 6 )
@@ -254,7 +265,7 @@ int compile_and_run( string code_ )
 		int line;
 		int col;
 		string err;
-		parse_first_error( line, col, err, result );
+		parse_first_error( line, col, err, result, exe );
 		if ( line )
 		{
 			warnings = exe;	// if exe was created this can only be a warning!
@@ -268,7 +279,7 @@ int compile_and_run( string code_ )
 				start += ( col - 1 );
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
-			errorbox->color( exe ? FL_GREEN : FL_RED ); // warning green / error red
+			errorbox->color( exe ? WarningColor : ErrorColor ); // warning green / error red
 			if ( !exe )
 				return 0;
 		}
@@ -285,7 +296,7 @@ int compile_and_run( string code_ )
 		else
 			errorbox->copy_label( "^y = delete line, ^l = duplicate line, ^r = restart, ^t = save template, ESC=exit" );
 		FirstMessage = false;
-		errorbox->color( FL_GRAY );
+		errorbox->color( OkColor );
 	}
 	// re-run only if exe changed
 	if ( exe )
@@ -320,7 +331,7 @@ void style_check( const string& name_ )
 		int line;
 		int col;
 		string err;
-		parse_first_error( line, col, err, result );
+		parse_first_error( line, col, err, result, true );
 		if ( line )
 		{
 			// display error line in error panel
@@ -331,7 +342,7 @@ void style_check( const string& name_ )
 				start += ( col - 1 );
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
-			errorbox->color( FL_YELLOW );
+			errorbox->color( StyleWarningColor );
 		}
 	}
 }
@@ -389,7 +400,7 @@ static int kf_save_template( int c_, Fl_Text_Editor *e_ )
 	char *text = e_->buffer()->text();
 	cxx_template = text;
 	free( text );
-	if ( errorbox->color() == FL_GRAY )	// save only when no errors/warnings
+	if ( errorbox->color() == OkColor )	// save only when no errors/warnings
 		errorbox->copy_label( "Saved as template!" );
 	return 1;
 }
@@ -400,6 +411,17 @@ static int kf_restart( int c_, Fl_Text_Editor *e_ )
 	if ( backup_file.size() &&
 	     fl_choice( "Restart loosing all changes?", "Yes", "No", 0 ) == 0 )
 		textbuff->loadfile( backup_file.c_str() );
+	return 1;
+}
+
+static int kf_ignore_warning( int c_, Fl_Text_Editor *e_ )
+{
+	if ( errorbox->color() == OkColor )
+		return 1;
+	string warning = errorbox->label();
+	warning_ignores[warning] = true;
+	printf( "Warning: '%s' ignored\n", warning.c_str() );
+	cb_compile( e_->buffer() );
 	return 1;
 }
 
@@ -511,6 +533,7 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
 	editor->add_key_binding( 'r', FL_CTRL, kf_restart );
+	editor->add_key_binding( 'w', FL_CTRL, kf_ignore_warning );
 
 	editor->buffer( textbuff ); // attach text buffer to editor
 	if ( CxxSyntax )
