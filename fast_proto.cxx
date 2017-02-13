@@ -416,7 +416,7 @@ static int kf_restart( int c_, Fl_Text_Editor *e_ )
 
 static int kf_ignore_warning( int c_, Fl_Text_Editor *e_ )
 {
-	if ( errorbox->color() == OkColor )
+	if ( errorbox->color() == OkColor || errorbox->color() == ErrorColor )
 		return 1;
 	string warning = errorbox->label();
 	warning_ignores[warning] = true;
