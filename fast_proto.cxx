@@ -142,6 +142,22 @@ int parse_first_error( int &line_, int &col_, string& err_, string errfile_,
 			}
 		}
 	}
+	if ( !line_ && !warning_ )
+	{
+		// look for external errors
+		ifs.clear();
+		ifs.seekg( 0, ios::beg );
+		while ( getline( ifs, buf ) )
+		{
+			// parse for line with error
+			size_t errpos = buf.find( " error: " );
+			if ( errpos != string::npos )
+			{
+				err_ = buf; // report them, but without setting 'line_'
+				break;
+			}
+		}
+	}
 	return line_;
 }
 
@@ -266,18 +282,21 @@ int compile_and_run( string code_ )
 		int col;
 		string err;
 		parse_first_error( line, col, err, result, exe );
-		if ( line )
+		if ( line || err.size() )
 		{
 			warnings = exe;	// if exe was created this can only be a warning!
 			if ( warnings && !ShowWarnings )
 				return 0;
 			// display error/warning line in error panel
 //			printf( "error in line %d: %s\n", line, err.c_str() );
-			int start = textbuff->skip_lines( 0, line - 1 );
-			int end = textbuff->skip_lines( start, 1 );
-			if ( col > 0 )
-				start += ( col - 1 );
-			textbuff->highlight( start, end );
+			if ( line )
+			{
+				int start = textbuff->skip_lines( 0, line - 1 );
+				int end = textbuff->skip_lines( start, 1 );
+				if ( col > 0 )
+					start += ( col - 1 );
+				textbuff->highlight( start, end );
+			}
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( exe ? WarningColor : ErrorColor ); // warning green / error red
 			if ( !exe )
