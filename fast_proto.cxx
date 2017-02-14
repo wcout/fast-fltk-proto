@@ -144,7 +144,7 @@ int parse_first_error( int &line_, int &col_, string& err_, string errfile_,
 	}
 	if ( !line_ && !warning_ )
 	{
-		// look for external errors
+		// look for "external" errors i.e. errors in included source
 		ifs.clear();
 		ifs.seekg( 0, ios::beg );
 		while ( getline( ifs, buf ) )
@@ -416,6 +416,7 @@ static int kf_duplicate_line( int c_, Fl_Text_Editor *e_ )
 
 static int kf_save_template( int c_, Fl_Text_Editor *e_ )
 {
+	// save current edit as template into config file
 	char *text = e_->buffer()->text();
 	cxx_template = text;
 	free( text );
@@ -435,12 +436,13 @@ static int kf_restart( int c_, Fl_Text_Editor *e_ )
 
 static int kf_ignore_warning( int c_, Fl_Text_Editor *e_ )
 {
+	// put currently displayed warning into ignore list
 	if ( errorbox->color() == OkColor || errorbox->color() == ErrorColor )
 		return 1;
 	string warning = errorbox->label();
 	warning_ignores[warning] = true;
 	printf( "Warning: '%s' ignored\n", warning.c_str() );
-	cb_compile( e_->buffer() );
+	cb_compile( e_->buffer() ); // re-run style check to remove warning display
 	return 1;
 }
 
@@ -550,6 +552,8 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 'd', FL_CTRL, kf_delete_line );
 	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
+
+	// and some meta keys for actions
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
 	editor->add_key_binding( 'r', FL_CTRL, kf_restart );
 	editor->add_key_binding( 'w', FL_CTRL, kf_ignore_warning );
