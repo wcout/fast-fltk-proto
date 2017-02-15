@@ -68,6 +68,7 @@ static bool ShowWarnings = true;
 static bool CheckStyle = true;
 static int CxxSyntax = -1;
 static bool FirstMessage = true;
+static bool DoActions = true;
 
 static bool regain_focus = true;
 
@@ -313,7 +314,7 @@ int compile_and_run( string code_ )
 		if ( !FirstMessage )
 			errorbox->copy_label( "No errors" );
 		else
-			errorbox->copy_label( "^y = delete line, ^l = duplicate line, ^r = restart, ^t = save template, ESC=exit" );
+			errorbox->copy_label( "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit" );
 		FirstMessage = false;
 		errorbox->color( OkColor );
 	}
@@ -388,7 +389,8 @@ void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ 
 		// => prepare to compile source if no other changes are
 		//    made within the next 0.3 seconds
 		Fl::remove_timeout( cb_compile, v_ );
-		Fl::add_timeout( 0.3, cb_compile, v_ );
+		if ( DoActions )
+			Fl::add_timeout( 0.3, cb_compile, v_ );
 	}
 }
 
@@ -443,6 +445,16 @@ static int kf_ignore_warning( int c_, Fl_Text_Editor *e_ )
 	warning_ignores[warning] = true;
 	printf( "Warning: '%s' ignored\n", warning.c_str() );
 	cb_compile( e_->buffer() ); // re-run style check to remove warning display
+	return 1;
+}
+
+static int kf_toggle_compile( int c_, Fl_Text_Editor *e_ )
+{
+	DoActions = !DoActions;
+	if ( !DoActions )
+		errorbox->copy_label( "Compiling disabled - F6 to enable" );
+	else
+		cb_compile( e_->buffer() );
 	return 1;
 }
 
@@ -557,6 +569,7 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
 	editor->add_key_binding( 'r', FL_CTRL, kf_restart );
 	editor->add_key_binding( 'w', FL_CTRL, kf_ignore_warning );
+	editor->add_key_binding( FL_F + 6, 0 , kf_toggle_compile );
 
 	editor->buffer( textbuff ); // attach text buffer to editor
 	if ( CxxSyntax )
