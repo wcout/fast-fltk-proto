@@ -511,7 +511,7 @@ int main( int argc_, char *argv_[] )
 	changed_cmd = text;
 	cfg.get( "style_check_cmd", text, "cppcheck --enable=all" );
 	style_check_cmd = text;
-	cfg.get( "cxx_template", text, "// type FLTK program here..\n" );
+	cfg.get( "cxx_template", text, "// type FLTK program here..\nint main() {}" );
 	cxx_template = text;
 
 	if ( source.size() )
