@@ -684,6 +684,7 @@ static void style_parse(const char *text,
 	// E - Directives
 	// F - Types
 	// G - Keywords
+	// H - FLTK Keywords
 
 	for (current = *style, col = 0, last = 0; length > 0; length--, text++)
 	{
@@ -935,13 +936,22 @@ style_update(int pos,                   // I - Position of update
 	// callbacks...
   stylebuf->select(pos, pos + nInserted - nDeleted);
 
-	// Re-parse the changed region; we do this by parsing from the
-	// beginning of the previous line of the changed region to the end of
-	// the line of the changed region...  Then we check the last
-	// style character and keep updating if we have a multi-line
-	// comment character...
+  // Re-parse the changed region; we do this by parsing from the
+  // beginning of the line of the changed region to the end of
+  // the line of the changed region...  Then we check the last
+  // style character and keep updating if we have a multi-line
+  // comment character...
   start = textbuff->line_start(pos);
-//  if (start > 0) start = textbuff->line_start(start - 1);
+  // the following code checks the style of the last character of the previous
+  // line. If it is a block comment, the previous line is interpreted as well.
+  int altStart = textbuff->prev_char(start);
+  if (altStart>0)
+  {
+     altStart = textbuff->prev_char(altStart);
+     if (altStart>=0 && stylebuf->byte_at(start-2)=='C')
+        start = textbuff->line_start(altStart);
+  }
+
   end   = textbuff->line_end(pos + nInserted);
   text  = textbuff->text_range(start, end);
   style = stylebuf->text_range(start, end);
