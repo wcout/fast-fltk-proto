@@ -895,102 +895,102 @@ style_unfinished_cb(int, void *)
 
 void
 style_update(int pos,                   // I - Position of update
-	int nInserted,                       // I - Number of inserted chars
-	int nDeleted,                        // I - Number of deleted chars
-	int /*nRestyled*/,                   // I - Number of restyled chars
-	const char * /*deletedText*/,        // I - Text that was deleted
-	void       *cbArg)                   // I - Callback data
+	int nInserted,                  // I - Number of inserted chars
+	int nDeleted,                   // I - Number of deleted chars
+	int /*nRestyled*/,              // I - Number of restyled chars
+	const char * /*deletedText*/,   // I - Text that was deleted
+	void       *cbArg)              // I - Callback data
 {
-  int start,                            // Start of text
-  end;                                  // End of text
-  char last,                            // Last style on line
-  *style,                               // Style data
-  *text;                                // Text data
+	int start,                      // Start of text
+		end;                    // End of text
+	char last,                      // Last style on line
+	*style,                         // Style data
+	*text;                          // Text data
 
 
 	// If this is just a selection change, just unselect the style buffer...
-  if (nInserted == 0 && nDeleted == 0)
-  {
-	  stylebuf->unselect();
-	  return;
-  }
+	if (nInserted == 0 && nDeleted == 0)
+	{
+		stylebuf->unselect();
+		return;
+	}
 
 	// Track changes in the text buffer...
-  if (nInserted > 0)
-  {
-	  // Insert characters into the style buffer...
-	  style = new char[nInserted + 1];
-	  memset(style, 'A', nInserted);
-	  style[nInserted] = '\0';
+	if (nInserted > 0)
+	{
+		// Insert characters into the style buffer...
+		style = new char[nInserted + 1];
+		memset(style, 'A', nInserted);
+		style[nInserted] = '\0';
 
-	  stylebuf->replace(pos, pos + nDeleted, style);
-	  delete[] style;
-  }
-  else
-  {
-	  // Just delete characters in the style buffer...
-	  stylebuf->remove(pos, pos + nDeleted);
-  }
+		stylebuf->replace(pos, pos + nDeleted, style);
+		delete[] style;
+	}
+	else
+	{
+		// Just delete characters in the style buffer...
+		stylebuf->remove(pos, pos + nDeleted);
+	}
 
 	// Select the area that was just updated to avoid unnecessary
 	// callbacks...
-  stylebuf->select(pos, pos + nInserted - nDeleted);
+	stylebuf->select(pos, pos + nInserted - nDeleted);
 
-  // Re-parse the changed region; we do this by parsing from the
-  // beginning of the line of the changed region to the end of
-  // the line of the changed region...  Then we check the last
-  // style character and keep updating if we have a multi-line
-  // comment character...
-  start = textbuff->line_start(pos);
-  // the following code checks the style of the last character of the previous
-  // line. If it is a block comment, the previous line is interpreted as well.
-  int altStart = textbuff->prev_char(start);
-  if (altStart>0)
-  {
-     altStart = textbuff->prev_char(altStart);
-     if (altStart>=0 && stylebuf->byte_at(start-2)=='C')
-        start = textbuff->line_start(altStart);
-  }
+	// Re-parse the changed region; we do this by parsing from the
+	// beginning of the line of the changed region to the end of
+	// the line of the changed region...  Then we check the last
+	// style character and keep updating if we have a multi-line
+	// comment character...
+	start = textbuff->line_start(pos);
+	// the following code checks the style of the last character of the previous
+	// line. If it is a block comment, the previous line is interpreted as well.
+	int altStart = textbuff->prev_char(start);
+	if (altStart > 0)
+	{
+		altStart = textbuff->prev_char(altStart);
+		if (altStart >= 0 && stylebuf->byte_at(start - 2) == 'C')
+			start = textbuff->line_start(altStart);
+	}
 
-  end   = textbuff->line_end(pos + nInserted);
-  text  = textbuff->text_range(start, end);
-  style = stylebuf->text_range(start, end);
-  if (start == end)
-	  last = 0;
-  else
-	  last  = style[end - start - 1];
+	end   = textbuff->line_end(pos + nInserted);
+	text  = textbuff->text_range(start, end);
+	style = stylebuf->text_range(start, end);
+	if (start == end)
+		last = 0;
+	else
+		last  = style[end - start - 1];
 
 //  printf("start = %d, end = %d, text = \"%s\", style = \"%s\", last='%c'...\n",
 //         start, end, text, style, last);
 
-  style_parse(text, style, end - start);
+	style_parse(text, style, end - start);
 
 //  printf("new style = \"%s\", new last='%c'...\n",
 //         style, style[end - start - 1]);
 
-  stylebuf->replace(start, end, style);
-  ((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
+	stylebuf->replace(start, end, style);
+	((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
 
-  if (start == end || last != style[end - start - 1])
-  {
+	if (start == end || last != style[end - start - 1])
+	{
 //    printf("Recalculate the rest of the buffer style\n");
-	  // Either the user deleted some text, or the last character
-	  // on the line changed styles, so reparse the
-	  // remainder of the buffer...
-	  free(text);
-	  free(style);
+		// Either the user deleted some text, or the last character
+		// on the line changed styles, so reparse the
+		// remainder of the buffer...
+		free(text);
+		free(style);
 
-	  end   = textbuff->length();
-	  text  = textbuff->text_range(start, end);
-	  style = stylebuf->text_range(start, end);
+		end   = textbuff->length();
+		text  = textbuff->text_range(start, end);
+		style = stylebuf->text_range(start, end);
 
-	  style_parse(text, style, end - start);
+		style_parse(text, style, end - start);
 
-	  stylebuf->replace(start, end, style);
-	  ((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
-  }
+		stylebuf->replace(start, end, style);
+		((Fl_Text_Editor *)cbArg)->redisplay_range(start, end);
+	}
 
-  free(text);
-  free(style);
+	free(text);
+	free(style);
 } // style_update
 
