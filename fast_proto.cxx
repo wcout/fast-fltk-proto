@@ -257,6 +257,17 @@ string compileCmd( const string& cmd_, const string& src_ )
 	return cmd;
 }
 
+void no_errors()
+{
+	textbuff->unhighlight();
+	if ( !FirstMessage )
+		errorbox->copy_label( "No errors" );
+	else
+		errorbox->copy_label( "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit" );
+	FirstMessage = false;
+	errorbox->color( OkColor );
+}
+
 int compile_and_run( string code_ )
 {
 	//  write code to temp file
@@ -310,13 +321,7 @@ int compile_and_run( string code_ )
 	}
 	if ( result.empty() )
 	{
-		textbuff->unhighlight();
-		if ( !FirstMessage )
-			errorbox->copy_label( "No errors" );
-		else
-			errorbox->copy_label( "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit" );
-		FirstMessage = false;
-		errorbox->color( OkColor );
+		no_errors();
 	}
 	// re-run only if exe changed
 	if ( exe )
@@ -572,6 +577,8 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( FL_F + 6, 0 , kf_toggle_compile );
 
 	editor->buffer( textbuff ); // attach text buffer to editor
+	no_errors();
+	FirstMessage = true;
 	if ( CxxSyntax )
 	{
 		editor->highlight_data( stylebuf, styletable,
