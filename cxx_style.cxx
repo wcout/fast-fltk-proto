@@ -531,6 +531,7 @@ static const char *fltk_keywords[] = { // List of some FLTK keywords...
 	"fl_draw_image_mono",
 	"fl_draw_pixmap",
 	"fl_draw_symbol",
+	"fl_end_complex_polygon",
 	"fl_end_line",
 	"fl_end_loop",
 	"fl_end_polygon",
