@@ -134,6 +134,9 @@ int parse_first_error( int &line_, int &col_, string& err_, string errfile_,
 			{
 				if ( warning_ && warning_ignores[err_] )
 					continue;
+				// special case: ignore a warning that comes before an error
+				if ( !warning_ && buf.find( "warning", errpos ) != string::npos )
+					continue;
 				line_ = line;
 				// try to read a column position
 				size_t col_pos = buf.find( ':', errpos );
@@ -266,6 +269,7 @@ void no_errors()
 		errorbox->copy_label( "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit" );
 	FirstMessage = false;
 	errorbox->color( OkColor );
+	errorbox->tooltip( 0 );
 }
 
 int compile_and_run( string code_ )
@@ -311,6 +315,7 @@ int compile_and_run( string code_ )
 			}
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( exe ? WarningColor : ErrorColor ); // warning green / error red
+			errorbox->copy_tooltip( result.substr( 1, 1024 ).c_str() );
 			if ( !exe )
 				return 0;
 		}
@@ -368,6 +373,7 @@ void style_check( const string& name_ )
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( StyleWarningColor );
+			errorbox->copy_tooltip( result.substr( 1, 1024 ).c_str() );
 		}
 	}
 }
