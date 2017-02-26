@@ -315,7 +315,7 @@ int compile_and_run( string code_ )
 			}
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( exe ? WarningColor : ErrorColor ); // warning green / error red
-			errorbox->copy_tooltip( result.substr( 1, 1024 ).c_str() );
+			errorbox->copy_tooltip( result.substr( 0, 1024 ).c_str() );
 			if ( !exe )
 				return 0;
 		}
@@ -373,7 +373,7 @@ void style_check( const string& name_ )
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( StyleWarningColor );
-			errorbox->copy_tooltip( result.substr( 1, 1024 ).c_str() );
+			errorbox->copy_tooltip( result.substr( 0, 1024 ).c_str() );
 		}
 	}
 }
