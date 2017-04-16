@@ -39,6 +39,9 @@
 #endif
 using namespace std;
 
+#define xstr(a) str(a)
+#define str(a) #a
+
 static const char APPLICATION[] = "fltk_fast_proto";
 static pid_t child_pid = -1;
 static Fl_Window *win = 0;
@@ -50,7 +53,14 @@ static string temp_cxx( temp + ".cxx" );
 static string errfile( "error.txt" );
 #if 1
 // use simple compile method (without warnings)
-static string compile_cmd( "fltk-config --use-images --compile" );
+static string compile_cmd(
+#ifndef FLTK_CONFIG
+	"fltk-config"
+#else
+	xstr(FLTK_CONFIG)
+#endif
+	" --use-images --compile"
+);
 #else
 // use a command like this to specify compiler flags (like -Wall to get warnings)
 // $(TARGET) will be replaced with the executable name
@@ -104,7 +114,7 @@ void focus_cb( void *v_ )
 	}
 }
 
-int parse_first_error( int &line_, int &col_, string& err_, string errfile_,
+int parse_first_error( int &line_, int &col_, string& err_, const string& errfile_,
                        bool warning_ = false )
 {
 	line_ = 0;
@@ -272,7 +282,7 @@ void no_errors()
 	errorbox->tooltip( 0 );
 }
 
-int compile_and_run( string code_ )
+int compile_and_run( const string& code_ )
 {
 	//  write code to temp file
 	ofstream outf( temp_cxx.c_str() );
@@ -516,7 +526,7 @@ int main( int argc_, char *argv_[] )
 	cfg.get( "w", w, 800 );
 	cfg.get( "h", h, 600 );
 	char *text;
-	cfg.get( "compile_cmd", text, "fltk-config --use-images --compile" );
+	cfg.get( "compile_cmd", text, compile_cmd.c_str() );
 	compile_cmd = text;
 	cfg.get( "changed_cmd", text, "shasum" );
 	changed_cmd = text;
