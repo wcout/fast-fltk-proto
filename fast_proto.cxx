@@ -241,6 +241,7 @@ pid_t execute( const char *exe_ )
 		// try to regain it..
 		Fl::remove_timeout( focus_cb );
 		Fl::add_timeout( 0.2, focus_cb );
+		Fl::focus( 0 ); // ensure re-gaining try is always done
 		regain_focus = true;
 	}
 	return child_pid;
