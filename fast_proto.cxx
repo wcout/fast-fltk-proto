@@ -507,7 +507,6 @@ static void show_help_and_exit()
 
 int main( int argc_, char *argv_[] )
 {
-	printf( "compile_cmd: '%s'\n", compile_cmd.c_str() );
 	// check if a source file or options are given
 	string source;
 	bool local_prefs( true );
