@@ -1,11 +1,14 @@
-# If using a not installed FLTK version, specify it's path here (with '/' at end)
-#FLTK := ../fltk-1.3/
-FLTK_CONFIG := $(FLTK)fltk-config
+# If using a not installed FLTK version, specify it's path here
+#FLTK := ../fltk-1.4
+
+FLTK_CONFIG := fltk-config
+ifdef FLTK
+FLTK_CONFIG := $(realpath $(FLTK))/$(FLTK_CONFIG)
+endif
 
 SRC :=  fast_proto.cxx
 OBJ := $(SRC:.cxx=.o)
 TGT := $(SRC:.cxx=)
 
 all:
-all:
-	$(CXX) -g -O2 -Wall -o $(TGT) `$(FLTK_CONFIG) --use-images --cxxflags` $(SRC) `$(FLTK_CONFIG) --use-images --ldflags`
+	$(CXX) -g -O2 -DFLTK_CONFIG=$(FLTK_CONFIG) -Wall -o $(TGT) `$(FLTK_CONFIG) --use-images --cxxflags` $(SRC) `$(FLTK_CONFIG) --use-images --ldflags`

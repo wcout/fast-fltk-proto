@@ -51,7 +51,7 @@ static Fl_Box *errorbox = 0;
 static string temp( "./temp_xxxx" );
 static string temp_cxx( temp + ".cxx" );
 static string errfile( "error.txt" );
-#if 1
+#if 0
 // use simple compile method (without warnings)
 static string compile_cmd(
 #ifndef FLTK_CONFIG
@@ -65,7 +65,19 @@ static string compile_cmd(
 // use a command like this to specify compiler flags (like -Wall to get warnings)
 // $(TARGET) will be replaced with the executable name
 // $(SRC) will be replaced with the source name
-static string compile_cmd( "g++ -Wall -o $(TARGET) `fltk-config --use-images --cxxflags` $(SRC) `fltk-config --use-images --ldflags`" );
+static string compile_cmd( "g++ -Wall -o $(TARGET) `"
+#ifndef FLTK_CONFIG
+	"fltk-config"
+#else
+	xstr(FLTK_CONFIG)
+#endif
+	" --use-images --cxxflags` $(SRC) `"
+#ifndef FLTK_CONFIG
+	"fltk-config"
+#else
+	xstr(FLTK_CONFIG)
+#endif
+	" --use-images --ldflags`" );
 #endif
 static string changed_cmd( "shasum" );
 static string changed;
@@ -494,6 +506,7 @@ static void show_help_and_exit()
 
 int main( int argc_, char *argv_[] )
 {
+	printf( "compile_cmd: '%s'\n", compile_cmd.c_str() );
 	// check if a source file or options are given
 	string source;
 	bool local_prefs( true );
