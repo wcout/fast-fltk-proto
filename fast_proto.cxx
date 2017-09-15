@@ -492,6 +492,38 @@ static int kf_toggle_compile( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static int kf_bigger( int c_, Fl_Text_Editor *e_ )
+{
+	int ts = e_->textsize();
+	if ( ts < 99 )
+	{
+		ts++;
+		e_->textsize( ts );
+		e_->linenumber_size( ts );
+		e_->linenumber_width( (int)( 40. * (double)ts / 14 ) );
+		style_init( ts, CxxSyntax != 1 );
+		e_->resize( e_->x(), e_->y(), e_->w(), e_->h() );
+		e_->parent()->redraw();
+	}
+	return 1;
+}
+
+static int kf_smaller( int c_, Fl_Text_Editor *e_ )
+{
+	int ts = e_->textsize();
+	if ( ts > 6 )
+	{
+		ts--;
+		e_->textsize( ts  );
+		e_->linenumber_size( ts );
+		e_->linenumber_width( (int)( 40. * (double)ts / 14 ) );
+		style_init( ts, CxxSyntax != 1 );
+		e_->resize( e_->x(), e_->y(), e_->w(), e_->h() );
+		e_->parent()->redraw();
+	}
+	return 1;
+}
+
 static void show_help_and_exit()
 {
 	printf( "fast_proto [-w] [-s] [-p] [cxxfile]\n"
@@ -604,6 +636,8 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 'r', FL_CTRL, kf_restart );
 	editor->add_key_binding( 'w', FL_CTRL, kf_ignore_warning );
 	editor->add_key_binding( FL_F + 6, 0 , kf_toggle_compile );
+	editor->add_key_binding( '+', FL_ALT , kf_bigger );
+	editor->add_key_binding( '-', FL_ALT , kf_smaller );
 
 	editor->buffer( textbuff ); // attach text buffer to editor
 	no_errors();
