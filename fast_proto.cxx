@@ -42,11 +42,18 @@ using namespace std;
 #define xstr(a) str(a)
 #define str(a) #a
 
+class TextEditor : public Fl_Text_Editor
+{
+public:
+	TextEditor( int x_, int y_, int w_, int h_, const char *l_ = 0 );
+	int handle( int e_ );
+};
+
 static const char APPLICATION[] = "fltk_fast_proto";
 static pid_t child_pid = -1;
 static Fl_Window *win = 0;
 static Fl_Text_Buffer *textbuff = 0;
-static Fl_Text_Editor *editor = 0;
+static TextEditor *editor = 0;
 static Fl_Box *errorbox = 0;
 static string temp( "./temp_xxxx" );
 static string temp_cxx( temp + ".cxx" );
@@ -492,18 +499,23 @@ static int kf_toggle_compile( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static void set_editor_textsize( Fl_Text_Editor *e_, int ts_ )
+{
+	e_->textsize( ts_ );
+	e_->linenumber_size( ts_ );
+	e_->linenumber_width( (int)( 40. * (double)ts_ / 14 ) ); // show line numbers
+	style_init( ts_, CxxSyntax != 1 );
+	e_->resize( e_->x(), e_->y(), e_->w(), e_->h() );
+	e_->parent()->redraw();
+}
+
 static int kf_bigger( int c_, Fl_Text_Editor *e_ )
 {
 	int ts = e_->textsize();
 	if ( ts < 99 )
 	{
 		ts++;
-		e_->textsize( ts );
-		e_->linenumber_size( ts );
-		e_->linenumber_width( (int)( 40. * (double)ts / 14 ) );
-		style_init( ts, CxxSyntax != 1 );
-		e_->resize( e_->x(), e_->y(), e_->w(), e_->h() );
-		e_->parent()->redraw();
+		set_editor_textsize( e_, ts );
 	}
 	return 1;
 }
@@ -514,12 +526,7 @@ static int kf_smaller( int c_, Fl_Text_Editor *e_ )
 	if ( ts > 6 )
 	{
 		ts--;
-		e_->textsize( ts  );
-		e_->linenumber_size( ts );
-		e_->linenumber_width( (int)( 40. * (double)ts / 14 ) );
-		style_init( ts, CxxSyntax != 1 );
-		e_->resize( e_->x(), e_->y(), e_->w(), e_->h() );
-		e_->parent()->redraw();
+		set_editor_textsize( e_, ts );
 	}
 	return 1;
 }
@@ -535,6 +542,28 @@ static void show_help_and_exit()
 	        "\tcxxfile\tuse this existing source file (otherwise use '%s' in current folder)\n",
 		APPLICATION, temp_cxx.c_str() );
 	exit( 0 );
+}
+
+TextEditor::TextEditor( int x_, int y_, int w_, int h_, const char *l_ ) :
+	Fl_Text_Editor( x_, y_, w_, h_, l_ )
+{
+	// add some editing key shortcuts (line deletion/duplication)
+	add_key_binding( 'y', FL_CTRL, kf_delete_line );
+	add_key_binding( 'd', FL_CTRL, kf_delete_line );
+	add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
+	add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
+}
+
+int TextEditor::handle( int e_ )
+{
+	// intercept Ctrl-Mousewheel to resize editor font
+	if ( e_ == FL_MOUSEWHEEL && Fl::event_ctrl() && Fl::event_dy() )
+	{
+		if ( Fl::event_dy() > 0 )
+			return kf_bigger( 0, this );
+		return kf_smaller( 0, this );
+	}
+	return Fl_Text_Editor::handle( e_ );
 }
 
 int main( int argc_, char *argv_[] )
@@ -606,7 +635,7 @@ int main( int argc_, char *argv_[] )
 	{
 		style_init( ts, CxxSyntax != 1 );
 	}
-	editor = new Fl_Text_Editor( 0, 0, win->w(), win->h() - 30 );
+	editor = new TextEditor( 0, 0, win->w(), win->h() - 30 );
 	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
 	errorbox->box( FL_FLAT_BOX );
 	int bgcolor;
@@ -620,16 +649,8 @@ int main( int argc_, char *argv_[] )
 	int cursor_color;
 	cfg.get( "cursor_color", cursor_color, (int)FL_GREEN );
 	editor->cursor_color( (Fl_Color)cursor_color );
-	editor->linenumber_width( (int)( 40. * (double)ts / 14 ) ); // show line numbers
-	editor->textfont( FL_COURIER );
-	editor->textsize( ts );
-	editor->linenumber_size( ts );
 
-	// add some key shortcuts (line deletion/duplication)
-	editor->add_key_binding( 'y', FL_CTRL, kf_delete_line );
-	editor->add_key_binding( 'd', FL_CTRL, kf_delete_line );
-	editor->add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
-	editor->add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
+	set_editor_textsize( editor, ts );
 
 	// and some meta keys for actions
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
