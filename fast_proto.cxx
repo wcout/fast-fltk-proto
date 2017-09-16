@@ -531,16 +531,19 @@ static int kf_smaller( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
-static void show_help_and_exit()
+static void show_options_and_exit()
 {
-	printf( "fast_proto [-w] [-s] [-p] [cxxfile]\n"
+	char buf[1024];
+	snprintf( buf, sizeof( buf ), "fast_proto [-w] [-s] [-p] [cxxfile]\n"
 	        "\t-w\tdon't show warnings\n"
 	        "\t-s\tdon't show style check messages\n"
 	        "\t-p\tuse global preferences file (otherwise use '%s.prefs' file in current folder)\n"
-	        "\t-h\tdon't syntax highlight source\n"
-	        "\t-hf\tdon't syntax highlight FLTK keywords\n"
-	        "\tcxxfile\tuse this existing source file (otherwise use '%s' in current folder)\n",
+	        "\t-x\tdon't syntax highlight source\n"
+	        "\t-xf\tdon't syntax highlight FLTK keywords\n"
+	        "\tcxxfile\tuse this existing source file (otherwise use '%s' in current folder)",
 		APPLICATION, temp_cxx.c_str() );
+	printf( "%s\n", buf );
+	fl_alert( "%s", buf );
 	exit( 0 );
 }
 
@@ -574,20 +577,25 @@ int main( int argc_, char *argv_[] )
 	for ( int i = 1; i < argc_; i++ )
 	{
 		string arg( argv_[ i ] );
-		if ( arg == "--help" )
-			show_help_and_exit();
+		if ( arg == "--help" || arg == "-h" )
+			show_options_and_exit();
 		else if ( arg == "-w" )
 			ShowWarnings = false;
 		else if ( arg == "-s" )
 			CheckStyle = false;
 		else if ( arg == "-p" )
 			local_prefs = false;
-		else if ( arg == "-h" )
+		else if ( arg == "-x" )
 			CxxSyntax = 0;
-		else if ( arg == "-hf" )
+		else if ( arg == "-xf" )
 			CxxSyntax = 1;
 		else if ( arg[0] != '-' )
 			source = arg;
+		else
+		{
+			fprintf( stderr, "Invalid option: '%s'\n", arg.c_str() );
+			show_options_and_exit();
+		}
 	}
 
 	// read in configurable values
