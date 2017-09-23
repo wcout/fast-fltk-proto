@@ -292,14 +292,15 @@ string compileCmd( const string& cmd_, const string& src_ )
 
 void no_errors()
 {
+	static const char help[] = "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit";
 	textbuff->unhighlight();
 	if ( !FirstMessage )
 		errorbox->copy_label( "No errors" );
 	else
-		errorbox->copy_label( "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit" );
+		errorbox->label( help );
 	FirstMessage = false;
 	errorbox->color( OkColor );
-	errorbox->tooltip( 0 );
+	errorbox->tooltip( errorbox->label() == help ? 0 : help );
 }
 
 int compile_and_run( const string& code_ )
@@ -495,7 +496,10 @@ static int kf_toggle_compile( int c_, Fl_Text_Editor *e_ )
 	if ( !DoActions )
 		errorbox->copy_label( "Compiling disabled - F6 to enable" );
 	else
+	{
+		changed.erase(); // ensure re-execution
 		cb_compile( e_->buffer() );
+	}
 	return 1;
 }
 
