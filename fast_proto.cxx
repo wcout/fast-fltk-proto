@@ -292,7 +292,7 @@ string compileCmd( const string& cmd_, const string& src_ )
 
 void no_errors()
 {
-	static const char help[] = "^y delete line, ^l duplicate line, ^r restart, ^t save template, F6 d/a compiling, ESC exit";
+	static const char help[] = "^y delete line, ^l duplicate line, ^r restart, ^t save template, F9 d/a compiling, ESC exit";
 	textbuff->unhighlight();
 	if ( !FirstMessage )
 		errorbox->copy_label( "No errors" );
@@ -668,7 +668,7 @@ int main( int argc_, char *argv_[] )
 	editor->add_key_binding( 't', FL_CTRL, kf_save_template );
 	editor->add_key_binding( 'r', FL_CTRL, kf_restart );
 	editor->add_key_binding( 'w', FL_CTRL, kf_ignore_warning );
-	editor->add_key_binding( FL_F + 6, 0 , kf_toggle_compile );
+	editor->add_key_binding( FL_F + 9, 0 , kf_toggle_compile );
 	editor->add_key_binding( '+', FL_ALT , kf_bigger );
 	editor->add_key_binding( '-', FL_ALT , kf_smaller );
 
