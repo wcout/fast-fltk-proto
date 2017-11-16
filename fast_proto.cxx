@@ -683,7 +683,9 @@ int main( int argc_, char *argv_[] )
 		textbuff->add_modify_callback( style_update, editor );
 	}
 	textbuff->add_modify_callback( changed_cb, textbuff );
-	textbuff->tab_distance( 3 );
+	int tab_size;
+	cfg.get( "tab_size", tab_size, 3 );
+	textbuff->tab_distance( tab_size );
 	if ( textbuff->loadfile( temp_cxx.c_str() ) )
 	{
 		// a new source file is started
@@ -723,6 +725,7 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "w", win->w() );
 	cfg.set( "h", win->h() );
 	cfg.set( "ts", editor->textsize() );
+	cfg.set( "tab_size", textbuff->tab_distance() );
 	cfg.set( CxxSyntax ? "bgcolor_syntax" : "bgcolor", (int)editor->color() );
 	cfg.set( "cursor_color", (int)editor->cursor_color() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
