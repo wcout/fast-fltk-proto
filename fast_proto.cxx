@@ -494,7 +494,7 @@ static int kf_toggle_compile( int c_, Fl_Text_Editor *e_ )
 {
 	DoActions = !DoActions;
 	if ( !DoActions )
-		errorbox->copy_label( "Compiling disabled - F6 to enable" );
+		errorbox->copy_label( "Compiling disabled - F9 to enable" );
 	else
 	{
 		changed.erase(); // ensure re-execution
