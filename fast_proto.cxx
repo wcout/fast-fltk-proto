@@ -98,6 +98,7 @@ static bool CheckStyle = true;
 static int CxxSyntax = -1;
 static bool FirstMessage = true;
 static bool DoActions = true;
+static double CompileDelay = 0.5;
 
 static bool regain_focus = true;
 
@@ -436,7 +437,7 @@ void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ 
 		//    made within the next 0.3 seconds
 		Fl::remove_timeout( cb_compile, v_ );
 		if ( DoActions )
-			Fl::add_timeout( 0.3, cb_compile, v_ );
+			Fl::add_timeout( CompileDelay, cb_compile, v_ );
 	}
 }
 
