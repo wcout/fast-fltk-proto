@@ -162,7 +162,11 @@ int parse_first_error( int &line_, int &col_, string& err_, const string& errfil
 			if ( line ) // if error line found, we are finished
 			{
 				if ( warning_ && warning_ignores[err_] )
+				{
+					err_.erase();
+					line = 0;
 					continue;
+				}
 				// special case: ignore a warning that comes before an error
 				if ( !warning_ && buf.find( "warning", errpos ) != string::npos )
 					continue;
@@ -328,10 +332,10 @@ int compile_and_run( const string& code_ )
 		int line;
 		int col;
 		string err;
+		warnings = exe;	// if exe was created this can only be a warning!
 		parse_first_error( line, col, err, result, exe );
 		if ( line || err.size() )
 		{
-			warnings = exe;	// if exe was created this can only be a warning!
 			if ( warnings && !ShowWarnings )
 				return 0;
 			// display error/warning line in error panel
