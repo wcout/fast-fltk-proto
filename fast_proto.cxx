@@ -24,6 +24,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Button.H>
 #include <FL/Fl_Preferences.H>
 #include <FL/Fl.H>
 #include <FL/filename.H>
@@ -54,7 +55,7 @@ static pid_t child_pid = -1;
 static Fl_Window *win = 0;
 static Fl_Text_Buffer *textbuff = 0;
 static TextEditor *editor = 0;
-static Fl_Box *errorbox = 0;
+static Fl_Button *errorbox = 0;
 static string temp( "./temp_xxxx" );
 static string temp_cxx( temp + ".cxx" );
 static string errfile( "error.txt" );
@@ -305,7 +306,8 @@ void no_errors()
 		errorbox->label( help );
 	FirstMessage = false;
 	errorbox->color( OkColor );
-	errorbox->tooltip( errorbox->label() == help ? 0 : help );
+	errorbox->selection_color( errorbox->color() );
+	errorbox->tooltip( 0 );
 }
 
 int compile_and_run( const string& code_ )
@@ -351,6 +353,7 @@ int compile_and_run( const string& code_ )
 			}
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( exe ? WarningColor : ErrorColor ); // warning green / error red
+			errorbox->selection_color( errorbox->color() );
 			errorbox->copy_tooltip( result.substr( 0, 1024 ).c_str() );
 			if ( !exe )
 				return 0;
@@ -409,6 +412,7 @@ void style_check( const string& name_ )
 			textbuff->highlight( start, end );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( StyleWarningColor );
+			errorbox->selection_color( errorbox->color() );
 			errorbox->copy_tooltip( result.substr( 0, 1024 ).c_str() );
 		}
 	}
@@ -540,6 +544,28 @@ static int kf_smaller( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static void errorbox_cb( Fl_Widget *w_, void *d_ )
+{
+	// user clicked on errorbox, do something useful
+	Fl_Button *errorbox = static_cast<Fl_Button *>( w_ );
+	if ( Fl::event_button() == FL_LEFT_MOUSE && Fl::event_clicks() == 1 )
+	{
+		// double click
+		if ( errorbox->color() == OkColor )
+		{
+			// show help line, if no error..
+			FirstMessage = true;
+			no_errors();
+		}
+		else
+		{
+			// .. otherwise run 'ignore warning'
+			Fl_Text_Editor *editor= static_cast<Fl_Text_Editor *>( d_ );
+			kf_ignore_warning( 0, editor );
+		}
+	}
+}
+
 static void show_options_and_exit()
 {
 	char buf[1024];
@@ -653,8 +679,10 @@ int main( int argc_, char *argv_[] )
 		style_init( ts, CxxSyntax != 1 );
 	}
 	editor = new TextEditor( 0, 0, win->w(), win->h() - 30 );
-	errorbox = new Fl_Box( 0, 0 + editor->h(), win->w(), 30 );
+	errorbox = new Fl_Button( 0, 0 + editor->h(), win->w(), 30 );
 	errorbox->box( FL_FLAT_BOX );
+	errorbox->visible_focus( 0 );
+	errorbox->callback( errorbox_cb, editor );
 	int bgcolor;
 	if ( CxxSyntax )
 		cfg.get( "bgcolor_syntax", bgcolor, (int)FL_WHITE );
