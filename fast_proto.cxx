@@ -25,6 +25,7 @@
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Preferences.H>
 #include <FL/Fl.H>
 #include <FL/filename.H>
@@ -109,6 +110,7 @@ static const Fl_Color StyleWarningColor = FL_YELLOW;
 static const Fl_Color OkColor = FL_GRAY;
 
 #include "cxx_style.cxx"
+#include "clipboard.cxx"
 
 void focus_cb( void *v_ )
 {
@@ -544,6 +546,11 @@ static int kf_smaller( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+void delete_cb( Fl_Widget *, void * )
+{
+	textbuff->remove_selection();
+}
+
 static void errorbox_cb( Fl_Widget *w_, void *d_ )
 {
 	// user clicked on errorbox, do something useful
@@ -601,6 +608,39 @@ int TextEditor::handle( int e_ )
 			return kf_bigger( 0, this );
 		return kf_smaller( 0, this );
 	}
+	// display clipboard functions popup with right mouse button
+	else if ( e_ == FL_PUSH && Fl::event_button() == FL_RIGHT_MOUSE )
+	{
+		Clipboard clip;
+		Fl_Menu_Item menu[10];
+		menu[0].text = 0;
+		string cliptext = clip.get();
+		if ( buffer() && buffer()->selected() )
+		{
+			menu->add( "Cu&t", FL_COMMAND + 'x', (Fl_Callback *)Fl_Text_Editor::kf_cut );
+			menu->add( "&Copy", FL_COMMAND + 'c', (Fl_Callback *)Fl_Text_Editor::kf_copy );
+			menu->add( "&Delete", 0, (Fl_Callback *)delete_cb );
+		}
+		if ( cliptext.size() )
+		{
+			menu->add( "&Paste", FL_COMMAND + 'v', (Fl_Callback *)Fl_Text_Editor::kf_paste );
+		}
+		if ( menu[0].text )
+		{
+			fl_cursor( FL_CURSOR_DEFAULT );
+			const Fl_Menu_Item *m = menu->popup( Fl::event_x(), Fl::event_y() );
+			if ( m )
+			{
+				m->do_callback( 0, this );
+			}
+		}
+		return 1;
+	}
+	else if ( e_ == FL_RELEASE && Fl::event_button() == FL_RIGHT_MOUSE )
+	{
+		return 1;
+	}
+
 	return Fl_Text_Editor::handle( e_ );
 }
 
