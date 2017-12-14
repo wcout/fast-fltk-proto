@@ -49,6 +49,7 @@ class TextEditor : public Fl_Text_Editor
 public:
 	TextEditor( int x_, int y_, int w_, int h_, const char *l_ = 0 );
 	int handle( int e_ );
+	TextEditor& scrollTo( int line_, int col_ = 0 );
 };
 
 static const char APPLICATION[] = "fltk_fast_proto";
@@ -60,6 +61,7 @@ static Fl_Button *errorbox = 0;
 static string temp( "./temp_xxxx" );
 static string temp_cxx( temp + ".cxx" );
 static string errfile( "error.txt" );
+static bool position_to_first_error = true;
 #if 0
 // use simple compile method (without warnings)
 static string compile_cmd(
@@ -352,6 +354,8 @@ int compile_and_run( const string& code_ )
 				if ( col > 0 )
 					start += ( col - 1 );
 				textbuff->highlight( start, end );
+				if ( position_to_first_error )
+					editor->scrollTo( line, col );
 			}
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( exe ? WarningColor : ErrorColor ); // warning green / error red
@@ -412,6 +416,8 @@ void style_check( const string& name_ )
 			if ( col > 0 )
 				start += ( col - 1 );
 			textbuff->highlight( start, end );
+			if ( position_to_first_error )
+				editor->scrollTo( line, col );
 			errorbox->copy_label( err.c_str() );
 			errorbox->color( StyleWarningColor );
 			errorbox->selection_color( errorbox->color() );
@@ -432,6 +438,7 @@ void cb_compile( void *v_ )
 		// compiled without errors (file is saved in temp_cxx)
 		style_check( temp_cxx );
 	}
+	position_to_first_error = false;
 }
 
 void changed_cb( int, int nInserted_, int nDeleted_, int, const char*, void* v_ )
@@ -555,9 +562,8 @@ static void errorbox_cb( Fl_Widget *w_, void *d_ )
 {
 	// user clicked on errorbox, do something useful
 	Fl_Button *errorbox = static_cast<Fl_Button *>( w_ );
-	if ( Fl::event_button() == FL_LEFT_MOUSE && Fl::event_clicks() == 1 )
+	if ( Fl::event_button() == FL_LEFT_MOUSE )
 	{
-		// double click
 		if ( errorbox->color() == OkColor )
 		{
 			// show help line, if no error..
@@ -566,9 +572,20 @@ static void errorbox_cb( Fl_Widget *w_, void *d_ )
 		}
 		else
 		{
-			// .. otherwise run 'ignore warning'
-			Fl_Text_Editor *editor= static_cast<Fl_Text_Editor *>( d_ );
-			kf_ignore_warning( 0, editor );
+			if ( Fl::event_clicks() == 0 )
+			{
+				// position to first error with single click
+				position_to_first_error = true;
+				Fl_Text_Editor *editor= static_cast<Fl_Text_Editor *>( d_ );
+				cb_compile( editor->buffer() ); // re-run compile
+			}
+			else if ( Fl::event_clicks() == 1 )
+			{
+				// run 'ignore warning' with double click
+				position_to_first_error = true;
+				Fl_Text_Editor *editor= static_cast<Fl_Text_Editor *>( d_ );
+				kf_ignore_warning( 0, editor );
+			}
 		}
 	}
 }
@@ -642,6 +659,16 @@ int TextEditor::handle( int e_ )
 	}
 
 	return Fl_Text_Editor::handle( e_ );
+}
+
+TextEditor& TextEditor::scrollTo( int line_, int col_/* = 0*/ )
+{
+	// set cursor to line/col and set view
+	if ( col_ )
+		col_--;
+	insert_position( skip_lines( 0, line_ - 1, true ) + col_ );
+	show_insert_position();
+	return *this;
 }
 
 int main( int argc_, char *argv_[] )
