@@ -750,18 +750,26 @@ int main( int argc_, char *argv_[] )
 	errorbox->box( FL_FLAT_BOX );
 	errorbox->visible_focus( 0 );
 	errorbox->callback( errorbox_cb, editor );
-	int bgcolor;
+	int bgcolor, selcolor;
 	if ( CxxSyntax )
+	{
 		cfg.get( "bgcolor_syntax", bgcolor, (int)FL_WHITE );
+		cfg.get( "selcolor_syntax", selcolor, (int)FL_YELLOW );
+	}
 	else
+	{
 		cfg.get( "bgcolor", bgcolor, (int)fl_lighter( FL_BLUE ) );
+		cfg.get( "selcolor", selcolor, (int)FL_BLUE );
+	}
 	editor->color( Fl_Color( bgcolor ) );
+	editor->selection_color( Fl_Color( selcolor ) );
 	editor->textcolor( fl_contrast( FL_WHITE, editor->color() ) );
 	editor->cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
 	int cursor_color;
 	cfg.get( "cursor_color", cursor_color, (int)FL_GREEN );
 	editor->cursor_color( (Fl_Color)cursor_color );
 
+	editor->textfont( FL_COURIER );
 	set_editor_textsize( editor, ts );
 
 	// and some meta keys for actions
@@ -827,6 +835,7 @@ int main( int argc_, char *argv_[] )
 	cfg.set( "ts", editor->textsize() );
 	cfg.set( "tab_size", textbuff->tab_distance() );
 	cfg.set( CxxSyntax ? "bgcolor_syntax" : "bgcolor", (int)editor->color() );
+	cfg.set( CxxSyntax ? "selcolor_syntax" : "selcolor", (int)editor->selection_color() );
 	cfg.set( "cursor_color", (int)editor->cursor_color() );
 	cfg.set( "compile_cmd", compile_cmd.c_str() );
 	cfg.set( "changed_cmd", changed_cmd.c_str() );
