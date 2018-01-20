@@ -1,7 +1,7 @@
 /*
  FLTK Fast Prototyping demo.
 
- (c) 2017 wcout wcout<wcout@gmx.net>
+ (c) 2017-2018 wcout wcout<wcout@gmx.net>
 
  Requirements:
 
