@@ -890,7 +890,7 @@ int main( int argc_, char *argv_[] )
 	editor->insert_position( textbuff->length() );
 
 	win->end();
-	win->resizable( win );
+	win->resizable( editor );
 	win->show();
 	win->position( x, y );	// try to show window on last position
 
