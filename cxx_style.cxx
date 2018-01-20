@@ -7,8 +7,8 @@ static bool HighLightFltk = true;
 static Fl_Text_Display::Style_Table_Entry
 	styletable[] = {                                // Style table
 	{ FL_BLACK,      FL_COURIER,           TS },    // A - Plain
-	{ FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS },    // B - Line comments
-	{ FL_DARK_GREEN, FL_HELVETICA_ITALIC,  TS },    // C - Block comments
+	{ FL_DARK_GREEN, FL_COURIER_ITALIC,    TS },    // B - Line comments
+	{ FL_DARK_GREEN, FL_COURIER_ITALIC,    TS },    // C - Block comments
 	{ FL_BLUE,       FL_COURIER,           TS },    // D - Strings
 	{ FL_DARK_RED,   FL_COURIER,           TS },    // E - Directives
 	{ FL_DARK_RED,   FL_COURIER_BOLD,      TS },    // F - Types
