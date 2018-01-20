@@ -817,12 +817,10 @@ int main( int argc_, char *argv_[] )
 	}
 	editor = new TextEditor( 0, 0, win->w(), win->h() - 30 );
 	#define SB_WIDTH 150
-//	errorbox = new Fl_Button( 0, 0 + editor->h(), win->w() - SB_WIDTH, 30 );
 	errorbox = new Fl_Button( 0 + SB_WIDTH, 0 + editor->h(), win->w() - SB_WIDTH, 30 );
 	errorbox->box( FL_FLAT_BOX );
 	errorbox->visible_focus( 0 );
 	errorbox->callback( errorbox_cb, editor );
-//	searchbox = new Fl_Input( editor->w() - SB_WIDTH, 0 + editor->h(), SB_WIDTH, 30 );
 	searchbox = new Fl_Input( 0, 0 + editor->h(), SB_WIDTH, 30 );
 	searchbox->box( FL_PLASTIC_DOWN_BOX );
 	searchbox->callback( searchbox_cb, editor );
