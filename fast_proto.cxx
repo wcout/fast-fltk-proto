@@ -662,13 +662,16 @@ static void searchbox_cb( Fl_Widget *w_, void *d_ )
 static void show_options_and_exit()
 {
 	char buf[1024];
-	snprintf( buf, sizeof( buf ), "fast_proto [-w] [-s] [-p] [cxxfile]\n"
+	snprintf( buf, sizeof( buf ), "Usage:\n"
+	        "\tfast_proto [OPTION ..] [CXXFILE]\n\n"
+	        "FLTK fast prototyping v0.2\n\n"
+	        "OPTIONS\n"
 	        "\t-w\tdon't show warnings\n"
 	        "\t-s\tdon't show style check messages\n"
 	        "\t-p\tuse global preferences file (otherwise use '%s.prefs' file in current folder)\n"
 	        "\t-x\tdon't syntax highlight source\n"
-	        "\t-xf\tdon't syntax highlight FLTK keywords\n"
-	        "\tcxxfile\tuse this existing source file (otherwise use '%s' in current folder)",
+	        "\t-xf\tdon't syntax highlight FLTK keywords\n\n"
+	        "CXXFILE\tuse this existing source file (otherwise use '%s' in current folder)",
 		APPLICATION, temp_cxx.c_str() );
 	printf( "%s\n", buf );
 	fl_alert( "%s", buf );
