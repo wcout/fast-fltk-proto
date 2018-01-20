@@ -25,6 +25,7 @@
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Input.H>
 #include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Preferences.H>
 #include <FL/Fl.H>
@@ -58,6 +59,7 @@ static Fl_Window *win = 0;
 static Fl_Text_Buffer *textbuff = 0;
 static TextEditor *editor = 0;
 static Fl_Button *errorbox = 0;
+static Fl_Input *searchbox = 0;
 static string temp( "./temp_xxxx" );
 static string temp_cxx( temp + ".cxx" );
 static string errfile( "error.txt" );
@@ -521,6 +523,48 @@ static int kf_toggle_compile( int c_, Fl_Text_Editor *e_ )
 	return 1;
 }
 
+static int kf_toggle_search( int c_, Fl_Text_Editor *e_ )
+{
+	static bool shown = true;
+	if ( shown )
+	{
+		searchbox->hide();
+		errorbox->resize( 0, errorbox->y(), e_->w(), errorbox->h() );
+		editor->take_focus();
+	}
+	else
+	{
+		searchbox->show();
+		errorbox->resize( searchbox->w(), errorbox->y(), e_->w() - searchbox->w(), errorbox->h() );
+		errorbox->parent()->redraw();
+		searchbox->take_focus();
+	}
+	shown = !shown;
+	return 1;
+}
+
+static int global_shortcut( int event_ )
+{
+	if ( event_ != FL_SHORTCUT )
+		return 0;
+
+	bool toggle_search( false );
+	if ( Fl::test_shortcut( FL_Escape ) )
+	{
+		// ESC in search input closes search
+		if ( Fl::focus() != searchbox )
+			return 0; // let FLTK close program
+		toggle_search = true;
+	}
+
+	if ( toggle_search || Fl::test_shortcut( FL_CTRL + 's' ) )
+	{
+		kf_toggle_search( 0, editor );
+		return 1;
+	}
+	return 0;
+}
+
 static void set_editor_textsize( Fl_Text_Editor *e_, int ts_ )
 {
 	e_->textsize( ts_ );
@@ -590,6 +634,31 @@ static void errorbox_cb( Fl_Widget *w_, void *d_ )
 	}
 }
 
+static void searchbox_cb( Fl_Widget *w_, void *d_ )
+{
+	string s( searchbox->value() );
+	if ( s.empty() )
+	{
+		textbuff->unhighlight();
+		return;
+	}
+	int found_pos = 0;
+	int found = Fl::event_ctrl() ?
+		textbuff->search_backward( editor->insert_position() - 1, s.c_str(), &found_pos ) :
+		textbuff->search_forward( editor->insert_position() + 1, s.c_str(), &found_pos );
+	if ( found )
+	{
+		textbuff->unhighlight();
+		textbuff->highlight( found_pos, found_pos + s.size() );
+		editor->insert_position( found_pos );
+		editor->show_insert_position();
+	}
+	else
+	{
+		fl_beep();
+	}
+}
+
 static void show_options_and_exit()
 {
 	char buf[1024];
@@ -614,6 +683,7 @@ TextEditor::TextEditor( int x_, int y_, int w_, int h_, const char *l_ ) :
 	add_key_binding( 'd', FL_CTRL, kf_delete_line );
 	add_key_binding( 'l', FL_CTRL, kf_duplicate_line );
 	add_key_binding( 'd', FL_CTRL + FL_SHIFT, kf_duplicate_line );
+	add_key_binding( 's', FL_CTRL, kf_toggle_search );
 }
 
 int TextEditor::handle( int e_ )
@@ -746,10 +816,20 @@ int main( int argc_, char *argv_[] )
 		style_init( ts, CxxSyntax != 1 );
 	}
 	editor = new TextEditor( 0, 0, win->w(), win->h() - 30 );
-	errorbox = new Fl_Button( 0, 0 + editor->h(), win->w(), 30 );
+	#define SB_WIDTH 150
+//	errorbox = new Fl_Button( 0, 0 + editor->h(), win->w() - SB_WIDTH, 30 );
+	errorbox = new Fl_Button( 0 + SB_WIDTH, 0 + editor->h(), win->w() - SB_WIDTH, 30 );
 	errorbox->box( FL_FLAT_BOX );
 	errorbox->visible_focus( 0 );
 	errorbox->callback( errorbox_cb, editor );
+//	searchbox = new Fl_Input( editor->w() - SB_WIDTH, 0 + editor->h(), SB_WIDTH, 30 );
+	searchbox = new Fl_Input( 0, 0 + editor->h(), SB_WIDTH, 30 );
+	searchbox->box( FL_PLASTIC_DOWN_BOX );
+	searchbox->callback( searchbox_cb, editor );
+	searchbox->when( FL_WHEN_ENTER_KEY | FL_WHEN_NOT_CHANGED );
+	searchbox->tooltip( "Search text: Enter=forward, ^Enter=backward\n"
+	                    "\t(^s toggles search box display)" );
+
 	int bgcolor, selcolor;
 	if ( CxxSyntax )
 	{
@@ -819,6 +899,9 @@ int main( int argc_, char *argv_[] )
 	// show source filename in title
 	string title( temp_cxx + " - " + win->label() );
 	win->copy_label( title.c_str() );
+
+	// add a global key handler
+	Fl::add_handler( global_shortcut );
 
 	// enter the main loop
 	Fl::run();
