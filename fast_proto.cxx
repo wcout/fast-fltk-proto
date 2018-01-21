@@ -50,6 +50,7 @@ class TextEditor : public Fl_Text_Editor
 public:
 	TextEditor( int x_, int y_, int w_, int h_, const char *l_ = 0 );
 	int handle( int e_ );
+	void draw();
 	TextEditor& scrollTo( int line_, int col_ = 0 );
 };
 
@@ -569,7 +570,8 @@ static void set_editor_textsize( Fl_Text_Editor *e_, int ts_ )
 {
 	e_->textsize( ts_ );
 	e_->linenumber_size( ts_ );
-	e_->linenumber_width( (int)( 40. * (double)ts_ / 14 ) ); // show line numbers
+	fl_font( e_->linenumber_font(), ts_ );
+	e_->linenumber_width( fl_width( "000000" ) ); // show line numbers
 	style_init( ts_, CxxSyntax != 1 );
 	e_->resize( e_->x(), e_->y(), e_->w(), e_->h() );
 	e_->parent()->redraw();
@@ -734,6 +736,30 @@ int TextEditor::handle( int e_ )
 	return Fl_Text_Editor::handle( e_ );
 }
 
+void TextEditor::draw()
+{
+	Fl_Text_Editor::draw();
+	// use area at bottom/left to display information (cursor column, insert mode)
+	int s = Fl::scrollbar_size();
+	int line, col;
+	if ( !position_to_linecol( insert_position(), &line, &col ) )
+		return;
+	char buf[30];
+	fl_font( FL_HELVETICA, s - 2 );
+	static int minw = 0;
+	if ( !minw )
+		minw = fl_width( "XXX | 000" );
+	if ( linenumber_width() < minw )
+		snprintf( buf, sizeof( buf ), "%s %d", insert_mode() ? "I" : "O", col + 1 );
+	else
+		snprintf( buf, sizeof( buf ), "%s | %d", insert_mode() ? "INS" : "OVR", col + 1 );
+	fl_push_clip( 2, h() - s, linenumber_width(), s - 1 );
+	fl_rectf( 2, h() - s, linenumber_width(), s - 1, FL_GRAY );
+	fl_color( FL_WHITE );
+	fl_draw( buf, 4, h() - 4 );
+	fl_pop_clip();
+}
+
 TextEditor& TextEditor::scrollTo( int line_, int col_/* = 0*/ )
 {
 	// set cursor to line/col and set view
@@ -891,6 +917,7 @@ int main( int argc_, char *argv_[] )
 
 	// position cursor at end of file
 	editor->insert_position( textbuff->length() );
+	editor->show_insert_position();
 
 	win->end();
 	win->resizable( editor );
