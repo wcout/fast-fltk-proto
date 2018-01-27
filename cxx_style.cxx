@@ -204,6 +204,7 @@ static const char *fltk_keywords[] = { // List of some FLTK keywords...
 	"FL_DND_ENTER",
 	"FL_DND_LEAVE",
 	"FL_DND_RELEASE",
+	"FL_DOT",
 	"FL_DOUBLE",
 	"FL_DRAG",
 	"FL_Delete",
