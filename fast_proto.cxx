@@ -872,6 +872,9 @@ int main( int argc_, char *argv_[] )
 	editor->selection_color( Fl_Color( selcolor ) );
 	editor->textcolor( fl_contrast( FL_WHITE, editor->color() ) );
 	editor->cursor_style( Fl_Text_Editor::SIMPLE_CURSOR );
+#ifdef HAVE_LINE_HIGHLIGHT
+	editor->line_highlight( 1 );
+#endif
 	int cursor_color;
 	cfg.get( "cursor_color", cursor_color, (int)FL_GREEN );
 	editor->cursor_color( (Fl_Color)cursor_color );
