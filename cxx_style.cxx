@@ -264,9 +264,9 @@ static const char *fltk_keywords[] = { // List of some FLTK keywords...
 	"FL_IMAGE_WITH_ALPHA",
 	"FL_INACTIVE_COLOR",
 	"FL_INDEX",
+	"FL_ITALIC",
 	"FL_Insert",
 	"FL_Iso_Key",
-	"FL_ITALIC",
 	"FL_JOIN_BEVEL",
 	"FL_JOIN_MITER",
 	"FL_JOIN_ROUND",
@@ -890,6 +890,13 @@ style_init(int ts = TS, bool highlight_fltk = true)
 	stylebuf->text(style);
 	delete[] style;
 	free(text);
+
+	qsort( code_types,  sizeof(code_types) / sizeof(code_types[0]),
+		    sizeof( code_types[0] ), compare_keywords );
+	qsort( code_keywords,  sizeof(code_keywords) / sizeof(code_keywords[0]),
+		    sizeof( code_keywords[0] ), compare_keywords );
+	qsort( fltk_keywords,  sizeof(fltk_keywords) / sizeof(fltk_keywords[0]),
+		    sizeof( fltk_keywords[0] ), compare_keywords );
 }
 
 
