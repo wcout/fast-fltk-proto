@@ -530,6 +530,8 @@ static int kf_toggle_search( int c_, Fl_Text_Editor *e_ )
 	if ( shown )
 	{
 		searchbox->hide();
+		searchbox->value( 0 );
+		searchbox->do_callback();
 		errorbox->resize( 0, errorbox->y(), e_->w(), errorbox->h() );
 		editor->take_focus();
 	}
