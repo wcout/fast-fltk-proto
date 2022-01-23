@@ -40,11 +40,15 @@ public:
 		_waitPaste( false ) {}
 	string get()
 	{
-		_waitPaste = true;
-		Fl::paste( *this, 1 );
-		while ( _waitPaste )
+		_clip.erase();
+		if ( Fl::clipboard_contains( Fl::clipboard_plain_text ) )
 		{
-			Fl::wait();
+			_waitPaste = true;
+			Fl::paste( *this, 1 );
+			while ( _waitPaste )
+			{
+				Fl::wait();
+			}
 		}
 		return _clip;
 	}

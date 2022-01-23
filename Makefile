@@ -1,5 +1,5 @@
 # If using a not installed FLTK version, specify it's path here
-#FLTK := ../fltk-1.4
+FLTK := ../fltk
 
 # use FLTK line highlight patch (STR-3453)
 #OPT=-DHAVE_LINE_HIGHLIGHT
