@@ -44,7 +44,7 @@ public:
 		if ( Fl::clipboard_contains( Fl::clipboard_plain_text ) )
 		{
 			_waitPaste = true;
-			Fl::paste( *this, 1 );
+			Fl::paste( *this, 1, Fl::clipboard_plain_text );
 			while ( _waitPaste )
 			{
 				Fl::wait();
